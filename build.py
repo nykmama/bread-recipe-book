@@ -414,11 +414,31 @@ def build_index_html():
     margin-top: 2px;
   }}
   .pdf-btn:active {{ opacity: 0.8; }}
+  .search-wrap {{
+    padding: 10px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }}
+  .search-input {{
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 9px 16px 9px 38px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #faf8f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center;
+    outline: none;
+    color: #2c2c2c;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }}
+  .search-input:focus {{ border-color: #3d2b1f; background-color: #fff; }}
+  .search-input::placeholder {{ color: #bbb; }}
   .filter-wrap {{
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 12px 16px;
+    padding: 10px 16px;
     display: flex;
     gap: 8px;
     background: #fff;
@@ -683,6 +703,9 @@ def build_index_html():
     <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
   </div>
 </header>
+<div class="search-wrap">
+  <input class="search-input" id="search-input" type="search" placeholder="材料名で検索（例: クリームチーズ）">
+</div>
 <div class="filter-wrap" id="filter-wrap"></div>
 <div class="grid" id="grid"></div>
 <div class="modal-overlay" id="modal-overlay">
@@ -696,12 +719,26 @@ def build_index_html():
 const RECIPES = {recipes_json};
 const CAT_EMOJI = {{'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸'}};
 let currentCat = 'すべて';
+let searchQuery = '';
+
+function matchesSearch(r) {{
+  if (!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return (r.ing_rows || []).some(row =>
+    row.kind === 'normal' && row.name && row.name.toLowerCase().includes(q)
+  );
+}}
+
 function getCats() {{
   const seen = new Set(); const cats = ['すべて'];
   RECIPES.forEach(r => {{ if (!seen.has(r.cat_name)) {{ seen.add(r.cat_name); cats.push(r.cat_name); }} }});
   return cats;
 }}
-function filtered() {{ return currentCat === 'すべて' ? RECIPES : RECIPES.filter(r => r.cat_name === currentCat); }}
+function filtered() {{
+  return RECIPES.filter(r =>
+    (currentCat === 'すべて' || r.cat_name === currentCat) && matchesSearch(r)
+  );
+}}
 function photoPath(r) {{ return r.photo_file ? `photos/${{r.photo_file}}` : null; }}
 function getCatColor(cat) {{ const r = RECIPES.find(x => x.cat_name === cat); return r ? r.cat_color : '#888'; }}
 function renderFilters() {{
@@ -758,6 +795,12 @@ function openModal(r) {{
 function closeModal() {{ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow = ''; }}
 document.getElementById('close-btn').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {{ if (e.target===document.getElementById('modal-overlay')) closeModal(); }});
+
+// 材料検索
+document.getElementById('search-input').addEventListener('input', e => {{
+  searchQuery = e.target.value.trim();
+  renderGrid();
+}});
 
 // パスワード認証
 const PW_HASH = '7f9b46856a96a72a759c5573671765d354aa29116e76a2ac1fe75f362c4e9004';
