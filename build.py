@@ -601,9 +601,79 @@ def build_index_html():
     -webkit-tap-highlight-color: transparent;
   }}
   .empty {{ text-align: center; padding: 60px 20px; color: var(--sub); font-size: 15px; grid-column: 1 / -1; }}
+  /* パスワード画面 */
+  .pw-overlay {{
+    position: fixed;
+    inset: 0;
+    background: #faf8f5;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }}
+  .pw-box {{
+    background: #fff;
+    border-radius: 24px;
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+    text-align: center;
+  }}
+  .pw-icon {{ font-size: 48px; margin-bottom: 12px; }}
+  .pw-title {{ font-size: 20px; font-weight: 800; color: #3d2b1f; margin-bottom: 4px; }}
+  .pw-sub {{ font-size: 13px; color: var(--sub); margin-bottom: 24px; }}
+  .pw-input {{
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 18px;
+    font-family: inherit;
+    text-align: center;
+    letter-spacing: 0.1em;
+    outline: none;
+    color: #2c2c2c;
+    background: #faf8f5;
+    transition: border-color 0.2s;
+  }}
+  .pw-input:focus {{ border-color: #3d2b1f; }}
+  .pw-input.error {{ border-color: #e53935; animation: shake 0.3s; }}
+  .pw-btn {{
+    width: 100%;
+    margin-top: 14px;
+    background: #3d2b1f;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }}
+  .pw-btn:active {{ opacity: 0.8; }}
+  .pw-error {{ color: #e53935; font-size: 13px; margin-top: 10px; min-height: 18px; }}
+  @keyframes shake {{
+    0%,100% {{ transform: translateX(0); }}
+    25% {{ transform: translateX(-8px); }}
+    75% {{ transform: translateX(8px); }}
+  }}
 </style>
 </head>
 <body>
+<div class="pw-overlay" id="pw-overlay">
+  <div class="pw-box">
+    <div class="pw-icon">🍞</div>
+    <div class="pw-title">NYKMAMAのパンレシピ</div>
+    <div class="pw-sub">パスワードを入力してください</div>
+    <input class="pw-input" id="pw-input" type="password" placeholder="••••••••••••" maxlength="20">
+    <button class="pw-btn" id="pw-btn">開く</button>
+    <div class="pw-error" id="pw-error"></div>
+  </div>
+</div>
 <header>
   <div class="header-row">
     <div>
@@ -688,6 +758,32 @@ function openModal(r) {{
 function closeModal() {{ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow = ''; }}
 document.getElementById('close-btn').addEventListener('click', closeModal);
 document.getElementById('modal-overlay').addEventListener('click', e => {{ if (e.target===document.getElementById('modal-overlay')) closeModal(); }});
+
+// パスワード認証
+const PW_HASH = '7f9b46856a96a72a759c5573671765d354aa29116e76a2ac1fe75f362c4e9004';
+async function hashStr(s) {{
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}}
+async function checkPw() {{
+  const val = document.getElementById('pw-input').value;
+  const h = await hashStr(val);
+  if (h === PW_HASH) {{
+    document.getElementById('pw-overlay').style.display = 'none';
+    sessionStorage.setItem('auth', '1');
+  }} else {{
+    const inp = document.getElementById('pw-input');
+    inp.classList.add('error');
+    document.getElementById('pw-error').textContent = 'パスワードが違います';
+    setTimeout(() => inp.classList.remove('error'), 400);
+  }}
+}}
+if (sessionStorage.getItem('auth') === '1') {{
+  document.getElementById('pw-overlay').style.display = 'none';
+}}
+document.getElementById('pw-btn').addEventListener('click', checkPw);
+document.getElementById('pw-input').addEventListener('keydown', e => {{ if (e.key === 'Enter') checkPw(); }});
+
 renderFilters(); renderGrid();
 </script>
 </body>
