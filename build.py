@@ -96,7 +96,7 @@ def draw_footer(cv, data, label=''):
     cv.setStrokeColor(RULE); cv.setLineWidth(0.6)
     cv.line(0, FOOTER_H, W, FOOTER_H)
     cv.setFont('F', 8); cv.setFillColor(INK3)
-    txt = f"ORIGINAL BREAD RECIPE BOOK  |  {data['cat_name']}"
+    txt = f"NYKMAMA BREAD RECIPE BOOK  |  {data['cat_name']}"
     if label: txt += f'  ({label})'
     cv.drawString(ML, 4*mm, txt)
     cv.drawRightString(ML+CW, 4*mm, f"{data['no']}  |  2026")
@@ -363,7 +363,7 @@ def build_index_html():
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>パンレシピ集</title>
+<title>NYKMAMAのパンレシピ</title>
 <style>
   :root {{
     --bg: #faf8f5;
@@ -607,7 +607,7 @@ def build_index_html():
 <header>
   <div class="header-row">
     <div>
-      <h1>🍞 パンレシピ集</h1>
+      <h1>🍞 NYKMAMAのパンレシピ</h1>
       <p class="subtitle" id="count-label"></p>
     </div>
     <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
