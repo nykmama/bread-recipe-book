@@ -112,7 +112,7 @@ def draw_photo(cv, data, x, y, w, h):
             iw, ih = img.size
             side = min(iw, ih)
             img = img.crop(((iw-side)//2,(ih-side)//2,(iw-side)//2+side,(ih-side)//2+side))
-            tmp = os.path.join(tempfile.gettempdir(), '_recipe_photo.jpg')
+            tmp = os.path.join(tempfile.gettempdir(), f'_recipe_photo_{data["no"]}.jpg')
             img.save(tmp, format='JPEG', quality=88)
             cv.drawImage(tmp, x, y, width=w, height=h, preserveAspectRatio=True, anchor='c')
             cv.setStrokeColor(RULE); cv.setLineWidth(0.5)
