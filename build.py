@@ -391,8 +391,29 @@ def build_index_html():
     top: 0;
     z-index: 100;
   }}
+  .header-row {{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }}
   header h1 {{ font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: #3d2b1f; }}
   header p.subtitle {{ font-size: 12px; color: var(--sub); margin-top: 2px; }}
+  .pdf-btn {{
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #3d2b1f;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    margin-top: 2px;
+  }}
+  .pdf-btn:active {{ opacity: 0.8; }}
   .filter-wrap {{
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -584,8 +605,13 @@ def build_index_html():
 </head>
 <body>
 <header>
-  <h1>🍞 パンレシピ集</h1>
-  <p class="subtitle" id="count-label"></p>
+  <div class="header-row">
+    <div>
+      <h1>🍞 パンレシピ集</h1>
+      <p class="subtitle" id="count-label"></p>
+    </div>
+    <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
+  </div>
 </header>
 <div class="filter-wrap" id="filter-wrap"></div>
 <div class="grid" id="grid"></div>
