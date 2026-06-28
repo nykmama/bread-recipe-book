@@ -717,7 +717,7 @@ def build_index_html():
 </div>
 <script>
 const RECIPES = {recipes_json};
-const CAT_EMOJI = {{'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸'}};
+const CAT_EMOJI = {{'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸','テーブルパン':'🧈','ピザ・ベーグル':'🍕'}};
 let currentCat = 'すべて';
 let searchQuery = '';
 
