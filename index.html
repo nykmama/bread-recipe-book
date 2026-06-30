@@ -32,10 +32,14 @@
     z-index: 100;
   }
   .header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-  header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.08em; color: #b5541b; line-height: 1.3; }
-  header h1 .emoji { font-size: 24px; display: inline-block; animation: wobble 2.5s ease-in-out infinite; }
-  @keyframes wobble { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
-  header p.subtitle-main { font-size: 11px; color: #c07850; margin-top: 3px; font-style: italic; letter-spacing: 0.04em; }
+  header h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.08em; color: #b5541b; line-height: 1.3; }
+  header h1 .e-wobble { font-size: 26px; display: inline-block; animation: wobble 2.5s ease-in-out infinite; }
+  header h1 .e-bounce { font-size: 26px; display: inline-block; animation: bounce 1.8s ease-in-out infinite; }
+  header h1 .e-spin { font-size: 26px; display: inline-block; animation: spin 3s linear infinite; }
+  @keyframes wobble { 0%,100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  header p.subtitle-main { font-size: 13px; color: #d4845a; margin-top: 4px; font-style: italic; letter-spacing: 0.05em; }
   header p.subtitle { font-size: 11px; color: var(--sub); margin-top: 1px; }
   .pdf-btn {
     flex-shrink: 0;
@@ -340,8 +344,8 @@
 <header>
   <div class="header-row">
     <div>
-      <h1><span class="emoji">🍞</span> NYKMAMAのパンレシピ</h1>
-      <p class="subtitle-main">きみたちが食べてくれた分だけ、幸せなレシピが増えた。</p>
+      <h1><span class="e-wobble">🍞</span> NYKMAMAのパンレシピ <span class="e-bounce">🥐</span></h1>
+      <p class="subtitle-main"><span class="e-spin" style="font-size:13px;">🌸</span> きみたちが食べてくれた分だけ、幸せなレシピが増えた。</p>
       <p class="subtitle" id="count-label"></p>
     </div>
     <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
