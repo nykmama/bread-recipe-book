@@ -398,8 +398,11 @@ def build_index_html():
     z-index: 100;
   }}
   .header-row {{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }}
-  header h1 {{ font-size: 22px; font-weight: 700; letter-spacing: 0.02em; color: #3d2b1f; }}
-  header p.subtitle {{ font-size: 12px; color: var(--sub); margin-top: 2px; }}
+  header h1 {{ font-size: 20px; font-weight: 700; letter-spacing: 0.08em; color: #b5541b; line-height: 1.3; }}
+  header h1 .emoji {{ font-size: 24px; display: inline-block; animation: wobble 2.5s ease-in-out infinite; }}
+  @keyframes wobble {{ 0%,100% {{ transform: rotate(-8deg); }} 50% {{ transform: rotate(8deg); }} }}
+  header p.subtitle-main {{ font-size: 11px; color: #c07850; margin-top: 3px; font-style: italic; letter-spacing: 0.04em; }}
+  header p.subtitle {{ font-size: 11px; color: var(--sub); margin-top: 1px; }}
   .pdf-btn {{
     flex-shrink: 0;
     display: inline-flex;
@@ -703,8 +706,8 @@ def build_index_html():
 <header>
   <div class="header-row">
     <div>
-      <h1>🍞 NYKMAMAのパンレシピ</h1>
-      <p class="subtitle">きみたちが食べてくれた分だけ、幸せなレシピが増えた。</p>
+      <h1><span class="emoji">🍞</span> NYKMAMAのパンレシピ</h1>
+      <p class="subtitle-main">きみたちが食べてくれた分だけ、幸せなレシピが増えた。</p>
       <p class="subtitle" id="count-label"></p>
     </div>
     <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
