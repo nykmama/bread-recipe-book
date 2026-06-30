@@ -850,7 +850,18 @@ renderFilters(); renderGrid();
         print(f'iCloud Drive フォルダが見つかりません（スキップ）: {ICLOUD_DIR}')
 
 
+def normalize_photo_extensions():
+    """photos/ フォルダ内の大文字拡張子ファイルを小文字にリネームする"""
+    for fpath in glob.glob('photos/*'):
+        base, ext = os.path.splitext(fpath)
+        if ext != ext.lower():
+            new_path = base + ext.lower()
+            os.rename(fpath, new_path)
+            print(f'リネーム: {os.path.basename(fpath)} → {os.path.basename(new_path)}')
+
 def main():
+    normalize_photo_extensions()
+
     # order.json を読む
     with open('order.json', encoding='utf-8') as f:
         order = json.load(f)
