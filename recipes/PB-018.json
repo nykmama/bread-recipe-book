@@ -8,7 +8,7 @@
   "photo_rotated": false,
   "meta_items": [
     {"label": "製法", "val": "ストレート法（2段階ミックス）"},
-    {"label": "加水率", "val": "約55%"},
+    {"label": "加水率", "val": "53〜57%"},
     {"label": "粉の種類", "val": "準強力粉 100%"},
     {"label": "焼成温度", "val": "210℃（電気）/ 200℃（ガス）"},
     {"label": "焼成時間", "val": "18〜22分"}
@@ -16,13 +16,13 @@
   "ing_rows": [
     {"kind": "sep", "name": "── ①仕込み材料 ──"},
     {"kind": "normal", "name": "準強力粉", "bp": "50", "weight": "150g"},
-    {"kind": "normal", "name": "きび砂糖", "bp": "—", "weight": "小さじ2（6g）"},
-    {"kind": "normal", "name": "✦ インスタントドライイースト", "bp": "—", "weight": "小さじ1/3（1.0g）"},
-    {"kind": "normal", "name": "はちみつ", "bp": "—", "weight": "10g"},
-    {"kind": "normal", "name": "💧 水（42〜43℃）", "bp": "—", "weight": "160〜170g"},
+    {"kind": "normal", "name": "きび砂糖", "bp": "2", "weight": "6g"},
+    {"kind": "normal", "name": "✦ インスタントドライイースト", "bp": "0.33", "weight": "1.0g"},
+    {"kind": "normal", "name": "はちみつ", "bp": "3.3", "weight": "10g"},
+    {"kind": "normal", "name": "💧 水（42〜43℃）", "bp": "53〜57", "weight": "160〜170g"},
     {"kind": "sep", "name": "── ②本ごね材料 ──"},
     {"kind": "normal", "name": "準強力粉", "bp": "50", "weight": "150g"},
-    {"kind": "normal", "name": "塩", "bp": "—", "weight": "小さじ1（3g）"},
+    {"kind": "normal", "name": "塩", "bp": "1", "weight": "3g"},
     {"kind": "sep", "name": "── 打ち粉用 ──"},
     {"kind": "normal", "name": "強力粉", "bp": "—", "weight": "適量"},
     {"kind": "sep", "name": "── 成形用（クランベリーチーズ）──"},
@@ -48,7 +48,7 @@
     "title": "🌿 酒種酵母 変換配合（BP20%・水分90%）",
     "items": [
       {"label": "酒種酵母", "val": "60.0g（①に使用）"},
-      {"label": "調整後の水", "val": "106〜116g"},
+      {"label": "調整後の水", "val": "106〜116g（BP35〜39%）"},
       {"label": "その他", "val": "変更なし"}
     ]
   },
