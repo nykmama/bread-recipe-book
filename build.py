@@ -358,6 +358,12 @@ def build_index_html():
             recipes.append(json.load(fp))
     recipes_json = json.dumps(recipes, ensure_ascii=False)
 
+    photo_mtime = {}
+    for fpath in glob.glob('photos/*'):
+        fname = os.path.basename(fpath)
+        photo_mtime[fname] = int(os.path.getmtime(fpath))
+    photo_mtime_json = json.dumps(photo_mtime, ensure_ascii=False)
+
     html = f'''<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -717,6 +723,7 @@ def build_index_html():
 </div>
 <script>
 const RECIPES = {recipes_json};
+const PHOTO_MTIME = {photo_mtime_json};
 const CAT_EMOJI = {{'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸','テーブルパン':'🧈','ピザ・ベーグル':'🍕'}};
 let currentCat = 'すべて';
 let searchQuery = '';
@@ -739,7 +746,7 @@ function filtered() {{
     (currentCat === 'すべて' || r.cat_name === currentCat) && matchesSearch(r)
   );
 }}
-function photoPath(r) {{ return r.photo_file ? `photos/${{r.photo_file}}` : null; }}
+function photoPath(r) {{ if (!r.photo_file) return null; const v = PHOTO_MTIME[r.photo_file] || '0'; return `photos/${{r.photo_file}}?v=${{v}}`; }}
 function getCatColor(cat) {{ const r = RECIPES.find(x => x.cat_name === cat); return r ? r.cat_color : '#888'; }}
 function renderFilters() {{
   const wrap = document.getElementById('filter-wrap');
