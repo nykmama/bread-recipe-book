@@ -9,22 +9,22 @@
   "meta_items": [
     {"label": "製法", "val": "ストレート法（2段階ミックス）"},
     {"label": "加水率", "val": "62〜69%"},
-    {"label": "粉の種類", "val": "強力粉85% / 薄力粉15%"},
+    {"label": "粉の種類", "val": "強力粉72% / 薄力粉28%"},
     {"label": "焼成温度", "val": "220℃（電気）/ 210℃（ガス）"},
     {"label": "焼成時間", "val": "15〜20分"}
   ],
   "ing_rows": [
-    {"kind": "sep", "name": "── ①仕込み材料 ──"},
-    {"kind": "normal", "name": "強力粉", "bp": "85", "weight": "127.0g"},
-    {"kind": "normal", "name": "薄力粉", "bp": "15", "weight": "23.0g"},
+    {"kind": "sep", "name": "── ①仕込み材料（粉75g）──"},
+    {"kind": "normal", "name": "強力粉", "bp": "36", "weight": "54.0g"},
+    {"kind": "normal", "name": "薄力粉", "bp": "14", "weight": "21.0g"},
     {"kind": "normal", "name": "✦ インスタントドライイースト", "bp": "1.1", "weight": "1.7g"},
     {"kind": "normal", "name": "砂糖", "bp": "4.6", "weight": "6.9g"},
-    {"kind": "normal", "name": "💧 水（42〜43℃）", "bp": "62〜69", "weight": "92〜100g"},
-    {"kind": "sep", "name": "── ②本ごね材料 ──"},
-    {"kind": "normal", "name": "強力粉", "bp": "85", "weight": "127.0g"},
-    {"kind": "normal", "name": "薄力粉", "bp": "15", "weight": "23.0g"},
-    {"kind": "normal", "name": "塩", "bp": "0.9", "weight": "1.4g"},
-    {"kind": "normal", "name": "オリーブオイル", "bp": "2.3", "weight": "3.5g"},
+    {"kind": "normal", "name": "💧 水（42〜43℃）", "bp": "55.7", "weight": "83.5g"},
+    {"kind": "sep", "name": "── ②本ごね材料（粉75g）──"},
+    {"kind": "normal", "name": "強力粉", "bp": "36", "weight": "54.0g"},
+    {"kind": "normal", "name": "薄力粉", "bp": "14", "weight": "21.0g"},
+    {"kind": "normal", "name": "塩", "bp": "1.7", "weight": "2.5g"},
+    {"kind": "normal", "name": "オリーブオイル", "bp": "13.9", "weight": "20.8g"},
     {"kind": "sep", "name": "── ガーリックトマトソース ──"},
     {"kind": "normal", "name": "市販のトマトソース", "bp": "—", "weight": "70g"},
     {"kind": "normal", "name": "トマトケチャップ", "bp": "—", "weight": "20g"},
@@ -38,7 +38,7 @@
     {"kind": "normal", "name": "オリーブオイル", "bp": "—", "weight": "小さじ1"},
     {"kind": "normal", "name": "粉チーズ", "bp": "—", "weight": "小さじ2"},
     {"kind": "normal", "name": "黒炒りごま", "bp": "—", "weight": "小さじ1/2"},
-    {"kind": "total", "name": "生地合計", "bp": "—", "weight": "約404.5g"}
+    {"kind": "total", "name": "生地合計（①②合計）", "bp": "—", "weight": "約265.4g"}
   ],
   "points": [
     "水は42〜43℃に温めておく（仕込み水）",
@@ -49,12 +49,12 @@
     "焼成前に表面にオリーブオイルを塗り、粉チーズ・黒炒りごまをかける",
     "斜めに切り込みを入れて（3cm間隔・長さ5cm・深さ7mm程度）から焼く"
   ],
-  "memo": "元レシピ粉合計130g→150g換算（×1.154）。ABC Cooking Studioレシピ。ストロンボリはイタリア発祥の巻きピザパン",
+  "memo": "元レシピ粉合計130g（①②各65g）→150g換算（①②各75g・×1.154）。ABC Cooking Studioレシピ。ストロンボリはイタリア発祥の巻きピザパン",
   "sake_callout": {
     "title": "🌿 酒種酵母 変換配合（BP20%・水分90%）",
     "items": [
-      {"label": "酒種酵母", "val": "30.0g"},
-      {"label": "調整後の水", "val": "65〜73g（BP43〜49%）"},
+      {"label": "酒種酵母", "val": "30.0g（粉総量150g×20%）"},
+      {"label": "調整後の水（①）", "val": "56.5g（BP37.7%）"},
       {"label": "その他", "val": "変更なし"}
     ]
   },
