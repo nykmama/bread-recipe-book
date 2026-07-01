@@ -37,13 +37,13 @@
       "kind": "normal",
       "name": "強力粉",
       "bp": "40",
-      "weight": "64.0g"
+      "weight": "60.0g"
     },
     {
       "kind": "normal",
       "name": "💧 水",
       "bp": "40",
-      "weight": "64.0g"
+      "weight": "60.0g"
     },
     {
       "kind": "normal",
@@ -59,7 +59,7 @@
       "kind": "normal",
       "name": "強力粉",
       "bp": "60",
-      "weight": "96.0g"
+      "weight": "90.0g"
     },
     {
       "kind": "normal",
@@ -71,19 +71,19 @@
       "kind": "normal",
       "name": "砂糖",
       "bp": "5",
-      "weight": "8.0g"
+      "weight": "7.5g"
     },
     {
       "kind": "normal",
       "name": "💧 水",
       "bp": "30",
-      "weight": "48.0g"
+      "weight": "45.0g"
     },
     {
       "kind": "normal",
       "name": "サラダ油",
       "bp": "10",
-      "weight": "16.0g"
+      "weight": "15.0g"
     },
     {
       "kind": "sep",
@@ -117,7 +117,7 @@
       "kind": "total",
       "name": "生地合計",
       "bp": "—",
-      "weight": "300.0g"
+      "weight": "280.5g"
     }
   ],
   "points": [
@@ -137,7 +137,7 @@
       },
       {
         "label": "調整後追加水",
-        "val": "83.2g（BP52.0%）"
+        "val": "78.0g（BP52.0%）"
       }
     ]
   },
