@@ -25,11 +25,10 @@
     {"kind": "sep", "name": "── Bバタークリーム ──"},
     {"kind": "normal", "name": "無塩バター（室温）", "bp": "—", "weight": "10.0g"},
     {"kind": "normal", "name": "砂糖", "bp": "—", "weight": "20.0g"},
-    {"kind": "normal", "name": "はちみつ", "bp": "—", "weight": "15.0g"},
     {"kind": "sep", "name": "── Cはちみつソース ──"},
+    {"kind": "normal", "name": "はちみつ", "bp": "—", "weight": "15.0g"},
     {"kind": "normal", "name": "無塩バター（食塩不使用）", "bp": "—", "weight": "20.0g"},
     {"kind": "normal", "name": "砂糖", "bp": "—", "weight": "25.0g"},
-    {"kind": "normal", "name": "薄力粉", "bp": "—", "weight": "20.0g"},
     {"kind": "normal", "name": "牛乳", "bp": "—", "weight": "15.0g"},
     {"kind": "total", "name": "生地合計", "bp": "—", "weight": "約387.5g"}
   ],
