@@ -1,10 +1,10 @@
-{
+﻿{
   "no": "SE-021",
   "cat_name": "季節系",
   "cat_color": "#E65100",
   "name": "マロンショコラパン",
   "sub": "酒種液種・サバトンマロンクリーム＆焦がしバター・ほろ苦いココア生地 / 5個分（150g）",
-  "photo_file": "",
+  "photo_file": "SE-021.jpg",
   "photo_rotated": false,
   "meta_items": [
     {"label": "製法", "val": "冷蔵長時間発酵＋酒種液種"},
