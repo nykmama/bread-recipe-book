@@ -1,4 +1,4 @@
-﻿{
+{
   "no": "SE-021",
   "cat_name": "季節系",
   "cat_color": "#E65100",
@@ -15,7 +15,7 @@
   ],
   "ing_rows": [
     {"kind": "normal", "name": "強力粉", "bp": "100", "weight": "150.0g"},
-    {"kind": "normal", "name": "純ココアパウダー", "bp": "4", "weight": "6.0g"},
+    {"kind": "normal", "name": "純ококаパウダー", "bp": "4", "weight": "6.0g"},
     {"kind": "normal", "name": "✦ 酒種液種", "bp": "20", "weight": "30.0g"},
     {"kind": "normal", "name": "💧 水", "bp": "42", "weight": "63.0g"},
     {"kind": "normal", "name": "牛乳", "bp": "13.3", "weight": "20.0g"},
