@@ -112,6 +112,9 @@ def draw_photo(cv, data, x, y, w, h):
             iw, ih = img.size
             side = min(iw, ih)
             img = img.crop(((iw-side)//2,(ih-side)//2,(iw-side)//2+side,(ih-side)//2+side))
+            # PDFサイズ抑制（GitHubの100MB制限）のため縮小して埋め込む
+            if side > 1200:
+                img = img.resize((1200, 1200), Image.LANCZOS)
             tmp = os.path.join(tempfile.gettempdir(), f'_recipe_photo_{data["no"]}.jpg')
             img.save(tmp, format='JPEG', quality=88)
             cv.drawImage(tmp, x, y, width=w, height=h, preserveAspectRatio=True, anchor='c')
