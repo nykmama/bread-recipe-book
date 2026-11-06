@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おすそ分けシート – NYKMAMAのパンレシピ</title>
+<style>
+:root {
+  --bg: #faf8f5;
+  --card-bg: #fff;
+  --text: #2c2c2c;
+  --sub: #777;
+  --border: #e8e4de;
+  --accent: #6a3d7a;
+  --red: #c0392b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+/* ── スクリーン用レイアウト ── */
+.screen-header {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.screen-header h1 { font-size: 18px; font-weight: 800; color: var(--accent); flex: 1; }
+.screen-header a { font-size: 12px; color: #888; text-decoration: none; }
+.screen-header a:hover { color: var(--text); }
+.main-layout {
+  display: flex;
+  height: calc(100vh - 54px);
+}
+/* 左：レシピ一覧 */
+.sidebar {
+  width: 340px;
+  min-width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+}
+.sidebar-top {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 14px 8px 36px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #faf8f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 11px center;
+  outline: none;
+  color: #2c2c2c;
+}
+.search-input:focus { border-color: var(--accent); }
+.cat-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.cat-filter::-webkit-scrollbar { display: none; }
+.cat-btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 14px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f0ede8;
+  color: #555;
+  white-space: nowrap;
+}
+.cat-btn.active { color: #fff; background: var(--accent); }
+.selected-count {
+  font-size: 11px;
+  color: var(--sub);
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #faf8f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.clear-btn {
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+.recipe-list {
+  overflow-y: auto;
+  flex: 1;
+}
+.recipe-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #f5f3f0;
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.recipe-item:hover { background: #faf8f5; }
+.recipe-item.checked { background: #f4eef7; }
+.recipe-cb { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+.recipe-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #ede8e0;
+}
+.recipe-thumb-ph {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: #ede8e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.recipe-info { flex: 1; min-width: 0; }
+.recipe-name { font-size: 13px; font-weight: 700; color: #2c2c2c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recipe-no { font-size: 10px; color: #aaa; font-weight: 600; }
+.badge-auto {
+  font-size: 9px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.badge-miss {
+  font-size: 9px;
+  background: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+/* 右：プレビューエリア */
+.preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.controls-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+.ctrl-group label { font-size: 12px; color: var(--sub); font-weight: 600; }
+.ctrl-input {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: #faf8f5;
+  outline: none;
+}
+.ctrl-input:focus { border-color: var(--accent); }
+.ctrl-select {
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: #faf8f5;
+  outline: none;
+  cursor: pointer;
+}
+.print-btn {
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.print-btn:disabled { background: #ccc; cursor: not-allowed; }
+.print-btn:not(:disabled):active { opacity: 0.85; }
+.preview-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #e8e4de;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.preview-empty {
+  color: var(--sub);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 60px;
+}
+/* ── A4シート ── */
+.sheet {
+  background: #fff;
+  width: 210mm;
+  min-height: 297mm;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  padding: 10mm;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex-shrink: 0;
+}
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 0.5mm solid #2c2c2c;
+}
+.sheet-to {
+  font-size: 14pt;
+  font-weight: 800;
+  color: #2c2c2c;
+  min-width: 60mm;
+}
+.sheet-to span { font-size: 9pt; color: #888; font-weight: 500; display: block; margin-bottom: 1mm; }
+.sheet-from {
+  font-size: 9pt;
+  color: #888;
+  text-align: right;
+  line-height: 1.6;
+}
+.sheet-items {
+  flex: 1;
+  display: grid;
+  gap: 3mm;
+}
+.grid-2x2 { grid-template-columns: 1fr 1fr; }
+.grid-2x3 { grid-template-columns: 1fr 1fr; }
+.grid-2x4 { grid-template-columns: 1fr 1fr; }
+.item-card {
+  border: 0.3mm solid #d8d0be;
+  border-radius: 2mm;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fffdf8;
+}
+.item-photo {
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  background: #f0ede8;
+}
+.item-photo-ph {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0ede8;
+  font-size: 24pt;
+  color: #ccc;
+}
+.item-body {
+  padding: 2mm 3mm 2.5mm;
+  flex: 1;
+}
+.item-no { font-size: 7pt; color: #aaa; font-weight: 700; margin-bottom: 0.5mm; }
+.item-name { font-size: 10pt; font-weight: 800; color: #2c2c2c; line-height: 1.3; margin-bottom: 1mm; }
+.item-desc { font-size: 7.5pt; color: #555; line-height: 1.4; margin-bottom: 1.5mm; }
+.item-reheat { font-size: 7pt; line-height: 1.4; margin-bottom: 1mm; }
+.item-reheat.ok-heat { color: #2c2c2c; }
+.item-reheat.ng-heat { color: var(--red); font-weight: 700; }
+.item-allergy { font-size: 6.5pt; color: #666; line-height: 1.4; }
+.item-allergy strong { color: #2c2c2c; font-weight: 700; }
+.item-miss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9pt;
+  color: #aaa;
+  font-style: italic;
+  flex: 1;
+  padding: 4mm;
+}
+.sheet-footer {
+  margin-top: 4mm;
+  padding-top: 3mm;
+  border-top: 0.3mm solid #d8d0be;
+  font-size: 7pt;
+  color: #555;
+  line-height: 1.6;
+}
+.sheet-footer .storage-text { margin-bottom: 1.5mm; }
+.sheet-disclaimer {
+  margin-top: 2mm;
+  font-size: 6pt;
+  color: #aaa;
+  text-align: right;
+}
+/* ── 印刷 ── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .preview-scroll { background: #fff; padding: 0; gap: 0; }
+  .sheet {
+    box-shadow: none;
+    page-break-after: always;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+  }
+  .sheet:last-child { page-break-after: auto; }
+}
+@page {
+  size: A4;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<header class="screen-header no-print">
+  <h1>🎁 おすそ分けシート</h1>
+  <a href="index.html">← レシピ一覧に戻る</a>
+</header>
+<div class="main-layout">
+  <!-- 左サイドバー -->
+  <aside class="sidebar no-print">
+    <div class="sidebar-top">
+      <input class="search-input" id="search-input" type="search" placeholder="名前で絞り込み">
+      <div class="cat-filter" id="cat-filter"></div>
+    </div>
+    <div class="selected-count">
+      <span id="sel-count">0件選択中</span>
+      <button class="clear-btn" id="clear-btn" onclick="clearAll()">すべて解除</button>
+    </div>
+    <div class="recipe-list" id="recipe-list"></div>
+  </aside>
+  <!-- 右プレビューエリア -->
+  <div class="preview-area">
+    <div class="controls-bar no-print">
+      <div class="ctrl-group">
+        <label>宛名</label>
+        <input class="ctrl-input" id="recipient" type="text" placeholder="○○さんへ" style="width:140px;" oninput="rerender()">
+      </div>
+      <div class="ctrl-group">
+        <label>日付</label>
+        <input class="ctrl-input" id="gift-date" type="date" oninput="rerender()">
+      </div>
+      <div class="ctrl-group">
+        <label>1枚あたり</label>
+        <select class="ctrl-select" id="per-sheet" onchange="rerender()">
+          <option value="4">4品</option>
+          <option value="6" selected>6品</option>
+          <option value="8">8品</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>写真</label>
+        <select class="ctrl-select" id="with-photo" onchange="rerender()">
+          <option value="1">あり</option>
+          <option value="0">なし</option>
+        </select>
+      </div>
+      <button class="print-btn" id="print-btn" disabled onclick="handlePrint()">🖨️ 印刷</button>
+    </div>
+    <div class="preview-scroll" id="preview-scroll">
+      <div class="preview-empty" id="preview-empty">左のリストからパンを選択してください</div>
+    </div>
+  </div>
+</div>
+<script>
+const RECIPES = [{"no": "HA-001", "name": "黒ごまソフトフランス 2種", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-001.jpg", "sub": "あんぱん（3個）＆ウインナーパン（3個）/ 元4個分→150g換算"}, {"no": "HA-002", "name": "新玉ねぎ＆オリーブのバトンブレッド", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-002.jpg", "sub": "酒種酵母・混ぜ込み成形 / 3本分（元200g→150g換算）"}, {"no": "HA-003", "name": "おさつ尽くしの胡麻入りソフトフランス", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-003.jpg", "sub": "酒種BP20%・黒胡麻入り・ダブル巻き / 4個分（元250g→150g換算）"}, {"no": "HA-004", "name": "ソフトミルクフランス", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-004.jpg", "sub": "酒種ストレート法・ピザプレート焼成 / 4本分（元200g→150g換算）"}, {"no": "HA-005", "name": "フランスあんぱん", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-005.jpg", "sub": "準強力粉・オートリーズ製法 / 元8個分→4個分（150g換算）"}, {"no": "HA-006", "name": "バゲット", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-006.jpg", "sub": "冷蔵発酵・本格バゲット / 元2本分→1本分（125g換算）"}, {"no": "HA-007", "name": "液種で作るバゲット", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-007.jpg", "sub": "液種製法・本格バゲット / 元2本分→1本分（半量）"}, {"no": "HA-008", "name": "プティバゲット", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-008.jpg", "sub": "はるゆたかハードブレッド専用粉・冷蔵発酵 / 3個分"}, {"no": "HA-009", "name": "ソフトバゲット＆めんたいフランス", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-009.jpg", "sub": "はるゆたか専用粉・パンチ製法 / 2個分"}, {"no": "HA-010", "name": "芳醇カンパーニュ2026", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-010.jpg", "sub": "ポーリッシュ種＋冷蔵発酵 / 元300g→225g換算（×0.75）・1個分"}, {"no": "HA-011", "name": "香ばしガーリックソルトブレッド", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-011.jpg", "sub": "準強力粉・ガーリックバターのせ / 6個分"}, {"no": "HA-012", "name": "全粒粉のレーズンセミハードブレッド", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-012.jpg", "sub": "全粒粉40%・クープ入り / 2本分"}, {"no": "HA-013", "name": "リュスティック・オ・フリュイ", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-013.jpg", "sub": "加水率80%・ドライフルーツとナッツ / 元4個分→2個分（半量）"}, {"no": "HA-014", "name": "酒種バジルのチーズベーコンツイストブレッド", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-014.jpg", "sub": "酒種液種・生バジル生地・3種チーズ包み / 3本分"}, {"no": "HA-015", "name": "チョコマカダミアフランス", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-015.jpg", "sub": "酒種液種・捏ねない高加水ハードパン / 元300g→150g換算・2本分"}, {"no": "HA-020", "name": "パリッと香ばしリュスティック", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-020.jpg", "sub": "折りたたみ製法・捏ねないハードパン / 元4個分→5個分（150g換算）"}, {"no": "HA-022", "name": "紫蘇トリプルチーズクッペ", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-022.jpg", "sub": "酒種液種・北海道産ハードブレッド専用粉・3種チーズ×大葉 / 5個分（150g）"}, {"no": "HA-023", "name": "タイガーブレッド", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-023.jpg", "sub": "上新粉上掛け生地・3種チーズフィリング / 元6個分→3個分（150g換算）"}, {"no": "HA-024", "name": "クランベリー・ホワイトショコラ・フロマージュ", "cat_name": "ハード系", "cat_color": "#283593", "photo_file": "HA-024.jpg", "sub": "酒種液種・全粒粉15%・クッペ型 / 5個分（150g）"}, {"no": "KA-001", "name": "バニラの香る至福のメロンパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-001.jpg", "sub": "クッキー生地・アーモンドプードル入り　©ecole du pain"}, {"no": "KA-002", "name": "ミルクコッペ", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-002.jpg", "sub": "粉チーズ入りクッキー生地のせ・リッチ配合 / 元8個分→6個分（150g換算）"}, {"no": "KA-003", "name": "コーヒーナッツロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-003.jpg", "sub": "コーヒーダマンド＆胡桃巻き込み・渦巻き / マフィン型6個分"}, {"no": "KA-004", "name": "香ばしピーナッツシナモンロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-004.jpg", "sub": "ピーナッツバター生地・クリームチーズフロスティング / 元6個分→5個分（150g換算）"}, {"no": "KA-006", "name": "ふんわりシナモンロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-006.jpg", "sub": "マフィン型・ベンチタイムなし・ホワイトチョコがけ / 元6個分→8個分（150g換算）"}, {"no": "KA-007", "name": "シュガーパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-007.jpg", "sub": "卵黄入りしっとり生地・ワッフルシュガー＆有塩バター / 元6個分→5個分（150g換算）"}, {"no": "KA-008", "name": "ブルーベリーとクリームチーズのスイートパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-008.jpg", "sub": "くぼみ成形・スイーツ感覚 / 元4個分→5個分（150g換算）"}, {"no": "KA-010", "name": "蜜リンゴパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-010.jpg", "sub": "甘く煮たリンゴをふわふわ生地で巻き込み / 元6個分→5個分（150g換算）"}, {"no": "KA-012", "name": "チョコシート折り込みパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-012.jpg", "sub": "手作り濃厚チョコシート折り込み・イングリッシュマフィン型 / 元6個分→5個分（150g換算）"}, {"no": "KA-014", "name": "ティラミス風マリトッツォ", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-014.jpg", "sub": "コーヒー生地・ティラミスクリーム / 元8個分→10個分（150g換算）"}, {"no": "KA-022", "name": "ツイストクリームパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-022.jpg", "sub": "クリームシート包み・渦巻き成形 / 元4個分→5個分（150g換算）"}, {"no": "KA-024", "name": "アールグレイ香るオレンジブレッド", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-024.jpg", "sub": "アールグレイ茶葉＆オレンジピール入り / 元2個分→150g換算・2個分"}, {"no": "KA-026", "name": "濃いお抹茶ちぎりパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-026.jpg", "sub": "仕込み生地＋冷蔵発酵・ホワイトチョコチップ入り / 元18個分→9個分（150g換算）"}, {"no": "KA-047", "name": "アーモンドクリームクランブル", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-047.jpg", "sub": "アーモンドクリーム＆クランブルのせ / 元12個分→7個分（150g換算）"}, {"no": "KA-058", "name": "はちみつロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-058.jpg", "sub": "バタークリーム巻き・はちみつソースがけ / 元300g→150g換算・5個分（15cm丸型）"}, {"no": "KA-059", "name": "メープルコーヒーマカダミアパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-059.jpg", "sub": "酒種液種・ラミネーション製法・コーヒー生地 / 5個分（150g換算）"}, {"no": "KA-060", "name": "レーズンアップルシナモンロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-060.jpg", "sub": "卵黄入りリッチ生地・ラム酒レーズン＆りんごコンポート / 5個分（150g換算）"}, {"no": "KA-061", "name": "お花の梅クリームチーズジャムパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-061.jpg", "sub": "梅酒仕込み梅ジャム＆クリームチーズフィリング・お花成形 / 元8個分→6個分（150g換算）"}, {"no": "KA-062", "name": "梅マスカルポーネ・ホワイトチョコパン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-062.jpg", "sub": "酒種液種・梅ジャム×マスカルポーネ×ホワイトチョコ包餡 / 6個分（150g）"}, {"no": "KA-063", "name": "ラムレーズンのコーヒーダマンドロール", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-063.jpg", "sub": "酒種液種・コーヒー生地×コーヒーダマンド×ラムレーズン巻き込み / 6個分（150g）"}, {"no": "KA-064", "name": "きなこあんドーナツ", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-064.jpg", "sub": "強力粉＆薄力粉・粒あん包餡・きなこきび砂糖まぶし / 元12個分→7個分（150g換算）"}, {"no": "KA-065", "name": "黒糖コーヒーと胡桃レーズンの酒種発酵スコーン", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-065.jpg", "sub": "酒種・冷蔵発酵3〜4日・今夜仕込んで明日焼く / 6個分"}, {"no": "KA-066", "name": "しっとり牛乳ぱん", "cat_name": "菓子パン", "cat_color": "#880E4F", "photo_file": "KA-066.jpg", "sub": "サワークリーム入り生地・ミルクシート折り込み・直径7.5cmカップ / 5個分（200g・分量そのまま）"}, {"no": "PB-001", "name": "カマンベールハニーフォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-001.jpg", "sub": "高加水・ヘラ混ぜ成形 / 18cmスクエア型1台分（150g換算）"}, {"no": "PB-002", "name": "手乗りピッツァ マルゲリータ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-002.jpg", "sub": "ポーリッシュ法・さっくり歯切れのよい生地 / 5個分"}, {"no": "PB-003", "name": "王道のピザパン", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-003.jpg", "sub": "食パン生地A・もちもち生地 / 6個分（150g換算）"}, {"no": "PB-004", "name": "もっちりしらすフォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-004.jpg", "sub": "生地から作る・しらすの塩気が絶妙 / 4個分"}, {"no": "PB-005", "name": "マルゲリータ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-005.jpg", "sub": "HBで作るピザ生地 / 元2枚分→1枚分（150g換算）"}, {"no": "PB-006", "name": "しらすと半熟卵のピザ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-006.jpg", "sub": "HBで作るピザ生地 / 元2枚分→1枚分（150g換算）"}, {"no": "PB-007", "name": "クアトロフォルマッジ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-007.jpg", "sub": "4種のチーズと蜂蜜 / 元2枚分→1枚分（150g換算）"}, {"no": "PB-008", "name": "本格フォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-008.jpg", "sub": "オーバーナイト製法 / 元4人分→150g換算"}, {"no": "PB-009", "name": "ヨーグルトフォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-009.jpg", "sub": "冷蔵発酵・もっちり / 15cm丸型1個分（150g）"}, {"no": "PB-010", "name": "惣菜フォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-010.jpg", "sub": "枝豆 / ほうれん草チーズ / 冷蔵発酵・大1個分"}, {"no": "PB-011", "name": "簡単フォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-011.jpg", "sub": "シンプルな材料と手順 / 元5個分→3個分（150g換算）"}, {"no": "PB-012", "name": "バジルフォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-012.jpg", "sub": "バジルペースト入り生地 / 元1個分→150g換算"}, {"no": "PB-013", "name": "ツナコーンフォカッチャ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-013.jpg", "sub": "酒種酵母・ツナ＆コーン＆チーズ / 20×20型1台分→150g換算"}, {"no": "PB-014", "name": "スモークチキンピザ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-014.jpg", "sub": "食パン生地A・もちもち生地 / 6個分（150g換算）"}, {"no": "PB-015", "name": "フォカッチャサンド", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-015.jpg", "sub": "冷蔵発酵・好きな具材を挟んで / 元4個分→3個分（150g換算）"}, {"no": "PB-016", "name": "シナモンレーズンベーグル", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-016.jpg", "sub": "シナモン＆レーズン生地込み / 元6個分→3個分（150g換算）"}, {"no": "PB-017", "name": "冷蔵発酵ベーグル", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-017.jpg", "sub": "好きなフィリングを包んで / 元6個分→3個分（150g換算）"}, {"no": "PB-018", "name": "2種のベーグル", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-018.jpg", "sub": "プレーン＆クランベリーチーズ / 各2個分（計4個）"}, {"no": "PB-019", "name": "ポルチーニとソーセージのピザ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-019.jpg", "sub": "本格ピザ生地・チェダーチーズの縁 / 元180g→150g換算"}, {"no": "PB-020", "name": "トマトとモッツァレラのストロンボリ", "cat_name": "ピザ・ベーグル", "cat_color": "#00695C", "photo_file": "PB-020.jpg", "sub": "ガーリックトマトソース・ベーコン・チーズ巻き / 元130g→150g換算"}, {"no": "SE-001", "name": "サツマイモのペストリー風", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-001.jpg", "sub": "酒種BP20%・HB捏ね / 7個分（元250g→150g換算）"}, {"no": "SE-002", "name": "レモンティーブレッド", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-002.jpg", "sub": "イースト・直捏ね法 / 18cmリング1台（元170g→150g換算）"}, {"no": "SE-003", "name": "生桜エビとじゃがいも枝豆の惣菜パン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-003.jpg", "sub": "酒種液種・冷蔵オートリーズ製法・平焼き / 5個分（150g換算）"}, {"no": "SE-004", "name": "たっぷりイチゴのマリトッツォ", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-004.jpg", "sub": "いちごパウダー入り生地・いちごクリーム / 元8個分→10個分（150g換算）"}, {"no": "SE-005", "name": "桜あんとクリームチーズのセミハードパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-005.jpg", "sub": "桜あん＆クリームチーズ包み・ねじり成形 / 元6個分→4個分（150g換算）"}, {"no": "SE-006", "name": "桜あんとクレームダマンドのうずまきパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-006.jpg", "sub": "桜あん＆クレームダマンド巻き込み / 元6個分→9個分（150g換算）"}, {"no": "SE-007", "name": "白パン生地で作る桜あんぱん", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-007.jpg", "sub": "ねじり成形・桜あんたっぷり / 元8個分→6個分（150g換算）"}, {"no": "SE-010", "name": "ハロウィン♪チョコ＆クリームちぎりパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-010.jpg", "sub": "ホシノ天然酵母・黒×オレンジの2色生地 / 元16個分→12個分（150g換算）"}, {"no": "SE-011", "name": "ジャンボレーズンパンプキン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-011.jpg", "sub": "かぼちゃパウダー・レーズン入り冷蔵発酵 / 元2個分→1個分（150g換算）"}, {"no": "SE-013", "name": "スイートポテトツイスト", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-013.jpg", "sub": "さつまいもあん包み・ピザカッターで簡単ツイスト / 元4個分→5個分（150g換算）"}, {"no": "SE-017", "name": "生とうもろこしとベーコン・アスパラ・クリームチーズパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-017.jpg", "sub": "酒種液種・冷蔵オートリーズ・平焼きオバール / 5個分（150g換算）"}, {"no": "SE-018", "name": "桃のカスタードパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-018.jpg", "sub": "酒種酵母・桃コンポート＆カスタード / 5個分（150g換算）"}, {"no": "SE-019", "name": "さつまいもとクリームチーズの秋スペシャリテ", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-019.jpg", "sub": "全卵＆卵黄入りリッチ生地・舟形成形 / 元6個分→5個分（150g換算）"}, {"no": "SE-020", "name": "抹茶と桜餡のマーブルブレッド", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-020.jpg", "sub": "プレーン＆抹茶の2色生地・桜餡入りねじり成形 / 元200g→150g換算・6個分"}, {"no": "SE-021", "name": "マロンショコラパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-021.jpg", "sub": "酒種液種・サバトンマロンクリーム＆焦がしバター・ほろ苦いココア生地 / 5個分（150g）"}, {"no": "SE-022", "name": "コーヒーマロンバターフレーキー", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-022.jpg", "sub": "酒種液種・コーヒー生地×マロンバター層・マフィン型 / 6個分（元レシピ160g・換算不要）"}, {"no": "SE-023", "name": "紅茶とりんご・ドライいちじくのティーロール", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-023.jpg", "sub": "酒種液種・アールグレイ生地×りんご＆いちじく巻き込み・紅茶アイシング / 5個分（150g）"}, {"no": "SE-024", "name": "パン・ヴィエノワ 蓬", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-024.jpg", "sub": "よもぎパウダー入り・餡バターミルククリーム挟み / 元6本分→4本分（150g換算）"}, {"no": "SE-025", "name": "かぼちゃあんぱん", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-025.jpg", "sub": "酒種液種・かぼちゃフレーク生地・凧糸かぼちゃ型成形 / 5個分（150g）※試作記録"}, {"no": "SE-027", "name": "かぼちゃのねじりあんパン", "cat_name": "季節系", "cat_color": "#E65100", "photo_file": "SE-027.jpg", "sub": "かぼちゃフレーク入り・パンプキンあん折り込みねじり成形 / 5個分（150g）"}, {"no": "SH-001", "name": "練乳キューブ食パン", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-001.jpg", "sub": "酒種酵母・キタノカオリ・10cm立方体型 / 1個分"}, {"no": "SH-002", "name": "リッチホテルブレッド", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-002.jpg", "sub": "中種法50%・生クリーム入りリッチ生地 / 1斤型1本分（165g換算）"}, {"no": "SH-011", "name": "シナモンレーズン食パン", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-011.jpg", "sub": "冷蔵発酵・ラムレーズン / 元2個分→1個分（165g換算）"}, {"no": "SH-025", "name": "酒種食パン（研究室標準レシピ Ver.1.0）", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-025.jpg", "sub": "酒種液種・冷蔵長時間発酵・毎日食べられるシンプル食パン / 1斤（165g換算）"}, {"no": "SH-026", "name": "マスカルポーネの生食パン", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-026.jpg", "sub": "はちみつ＆マスカルポーネ入りリッチ生地 / 元1.5斤分→165g換算・1斤分"}, {"no": "SH-027", "name": "酒種酵母の全粒粉20%角食パン", "cat_name": "食パン", "cat_color": "#4E342E", "photo_file": "SH-027.jpg", "sub": "酒種液種・全粒粉20%配合・冷蔵発酵＋室温発酵 / 165g・1斤分"}, {"no": "SO-001", "name": "玉ねぎとツナのパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-001.jpg", "sub": "新玉ねぎで甘さUP・チーズのせ / 元8個分→6個分（150g換算）"}, {"no": "SO-002", "name": "目玉焼きパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-002.jpg", "sub": "食パン生地A・お皿型成形 / 4個分（150g換算）"}, {"no": "SO-003", "name": "じゃがマヨベーコンパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-003.jpg", "sub": "酒種酵母・包餡成形 / 6個分"}, {"no": "SO-004", "name": "シーフードグラタン惣菜パン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-004.jpg", "sub": "酒種BP20%・総加水65% / 6個分（元200g→150g換算）"}, {"no": "SO-005", "name": "ハムマヨコーンパン＆ウィンナーパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-005.jpg", "sub": "酒種BP20%・1種の生地から2種仕上げ / 5個分（粉150g）"}, {"no": "SO-006", "name": "薄焼きコーンパン（ベーコン＆チーズ）", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-006.jpg", "sub": "イースト・直捏ね法 / 6個分（粉150g）"}, {"no": "SO-007", "name": "全粒粉のクープパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-007.jpg", "sub": "酒種対応・包餡成形 / 6個分（元200g→150g換算）"}, {"no": "SO-008", "name": "準強力粉の食事パン生地 2種", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-008.jpg", "sub": "もちもちコーンパン＆枝豆ベーコンマスタードウインナー / 150g・計6個"}, {"no": "SO-011", "name": "クリーミーポテトブレッド", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-011.jpg", "sub": "じゃがいも＆クリームチーズフィリング / 元7個分→5個分（150g換算）"}, {"no": "SO-012", "name": "プチ明太＆ガーリックフランス", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-012.jpg", "sub": "冷蔵オーバーナイト製法 / 元6個分→3個分（150g換算）"}, {"no": "SO-013", "name": "ほうれん草とベーコンチーズの朝食ロール", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-013.jpg", "sub": "栄養たっぷり朝食ロール / 元7個分→5個分（150g換算）"}, {"no": "SO-018", "name": "編み込みウインナーパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-018.jpg", "sub": "ピザカッターで簡単編み込み / 元4個分→5個分（150g換算）"}, {"no": "SO-019", "name": "アスパラベーコンフランス", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-019.jpg", "sub": "ソフトフランス生地・クープ入り / 元4個分→5個分（150g換算）"}, {"no": "SO-021", "name": "揚げないサクサクカレーパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-021.jpg", "sub": "レトルトカレー・炒りパン粉＆有塩バターのせ / 元4個分→5個分（150g換算）"}, {"no": "SO-023", "name": "こがしマヨたまパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-023.jpg", "sub": "半熟卵＆こがしマヨネーズ / 元4個分→5個分（150g換算）"}, {"no": "SO-024", "name": "忘れられないコーンパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-024.jpg", "sub": "じゃがいもペースト＆コーン缶まるごと / 元6個分→5個分（150g換算）"}, {"no": "SO-049", "name": "チキンラタトゥイユパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-049.jpg", "sub": "酒種液種・冷蔵オートリーズ・平焼きオバール / 5個分（150g換算）"}, {"no": "SO-050", "name": "シャウエッセンと炒め玉ねぎ・大葉・チーズのコッペパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-050.jpg", "sub": "酒種液種後入れ・冷蔵オートリーズ・手ごね / 5本分（150g換算）"}, {"no": "SO-051", "name": "チーズカレーパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-051.jpg", "sub": "酒種液種・焼き＆揚げ2種 / 5個分（150g換算）"}, {"no": "SO-052", "name": "カニカマとコーンのコールスロー風パン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-052.jpg", "sub": "酒種液種・平焼き成形 / 5個分（150g換算）"}, {"no": "SO-054", "name": "しらすとトマトのバジルチーズパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-054.jpg", "sub": "市販バジルパスタソース・しらす・ミニトマト / 4個分（150g換算）"}, {"no": "SO-055", "name": "ミートソース入りロングソーセージパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-055.jpg", "sub": "酒種液種・自家製ミートソース＆ロングソーセージ / 5個分（150g）"}, {"no": "SO-056", "name": "ツナ・明太子・コーンパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-056.jpg", "sub": "酒種液種・包餡成形 / 5個分（150g）"}, {"no": "SO-057", "name": "イカのトマトガーリックパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-057.jpg", "sub": "酒種液種・冷蔵長時間発酵・10cm紙カップ / 5個分（150g）"}, {"no": "SO-058", "name": "アスパラとブロックベーコンのカルボナーラパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-058.jpg", "sub": "酒種液種・冷蔵長時間発酵・濃厚カルボナーラクリーム / 5個分（150g）"}, {"no": "SO-059", "name": "包んじゃえ！焼きそばパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-059.jpg", "sub": "準強力粉・冷蔵発酵・焼きそば包餡 / 元12個分→6個分（150g換算）"}, {"no": "SO-060", "name": "マッシュルーム＆ゴルゴンゾーラパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-060.jpg", "sub": "酒種液種・マカダミアナッツ仕立て・オープン成形 / 5個分（150g）※試作記録"}, {"no": "SO-061", "name": "ジョンソンヴィル・ガーリックとコーンのクリーミーボート", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-061.jpg", "sub": "酒種液種・ボート型成形・コーンクリームフィリング / 5個分（150g）※試作記録"}, {"no": "SO-062", "name": "ズッキーニとベーコンのキッシュ風パン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-062.jpg", "sub": "酒種液種・濃縮アパレイユ＆粒マスタード・くぼみ成形 / 5個分（150g）"}, {"no": "SO-063", "name": "あおさ香るたらこポテトチーズクッペ", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-063.jpg", "sub": "酒種液種・あおさ練り込み生地・たらこポテト包餡 / 5個分（150g）"}, {"no": "SO-064", "name": "カレー生地のジャーマンポテトパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-064.jpg", "sub": "カレーパウダー入り生地・くぼみ成形・ジャーマンポテトトッピング / 5個分（150g）"}, {"no": "SO-065", "name": "明太ポテトパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-065.jpg", "sub": "酒種液種・冷蔵長時間発酵・くぼみ成形 / 5個分（150g）"}, {"no": "SO-066", "name": "マヨコーンパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-066.jpg", "sub": "酒種液種・冷蔵長時間発酵・くぼみ成形 / 5個分（150g）"}, {"no": "SO-067", "name": "フレッシュトマトとモッツァレラ・バジルのカプレーゼパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-067.jpg", "sub": "酒種液種・2回焼き成形・イタリアン惣菜パン / 5個分（150g）"}, {"no": "SO-068", "name": "エビアボカドパン", "cat_name": "惣菜パン", "cat_color": "#1B5E20", "photo_file": "SO-068.jpg", "sub": "酒種液種・冷蔵長時間発酵・くぼみ成形 / 5個分（150g）"}, {"no": "TB-001", "name": "レーズンバターの塩パン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-001.jpg", "sub": "じゅわ～とあふれる・ストレート法 / 元8個分→6個分（150g換算）"}, {"no": "TB-002", "name": "卵黄バターロール（プレーン＆チョコ）", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-002.jpg", "sub": "冷蔵発酵・キタノカオリ＋ファリーヌ / 6個分（150gそのまま）"}, {"no": "TB-003", "name": "全粒粉バンズ", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-003.jpg", "sub": "全粒粉20%・きび砂糖＆はちみつ配合 / 150g換算（元200g×0.75）"}, {"no": "TB-004", "name": "香ばしセサミチーズブレッド", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-004.jpg", "sub": "ごまの風味とチーズのコク / 元6個分→5個分（150g換算）"}, {"no": "TB-005", "name": "ふんわりホットドック", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-005.jpg", "sub": "次の日でもふんわり / 元6個分→4個分（150g換算）"}, {"no": "TB-006", "name": "塩麹たまごとセロリのコッペパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-006.jpg", "sub": "酒種液種・冷蔵オートリーズ・手ごね / 5本分（150g換算）"}, {"no": "TB-007", "name": "はちみつきなこパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-007.jpg", "sub": "オーバーナイト加糖中種法 / 元8個分→6個分（150g換算）"}, {"no": "TB-009", "name": "シンプルなプチハード", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-009.jpg", "sub": "イースト少なめ・クープ入りプチパン / 元4個分→5個分（150g換算）"}, {"no": "TB-010", "name": "濃い味はちみつパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-010.jpg", "sub": "はちみつ＆生クリーム入り・クープ入り / 元4個分→5個分（150g換算）"}, {"no": "TB-013", "name": "やみつきガーリックソフトフランス", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-013.jpg", "sub": "自家製ガーリックバター・にんにくをオーブンで焼くのでマイルド / 元4個分→5個分（150g換算）"}, {"no": "TB-029", "name": "あん塩バターパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-029.jpg", "sub": "つぶあん＆有塩バター巻き込み・ロールパン成形 / 元6個分→150g換算・6個分"}, {"no": "TB-030", "name": "さっくり食感の塩バターロール", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-030.jpg", "sub": "準強力粉・バターミルクパウダー入り・有塩バター巻き込み / 元8個分→6個分（150g換算）"}, {"no": "TB-031", "name": "基本の塩パン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-031.jpg", "sub": "強力粉＋準強力粉・有塩バター巻き込み / 元8個分→6個分（150g換算）"}, {"no": "TB-033", "name": "春恋ピーナッツロールパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-033.jpg", "sub": "春よ恋（高加水用）・ピーナッツバター巻き込み / 元6個分→4個分（150g換算）"}, {"no": "TB-034", "name": "あんバターパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-034.jpg", "sub": "準強力粉・耐熱カップ焼き・粒あん＆有塩バター巻き込み / 元6個分→5個分（150g換算）"}, {"no": "TB-035", "name": "幸せふわふわバターロール", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-035.jpg", "sub": "スキムミルク入り・翌日までふわふわ / 元8個分→6個分（150g換算）"}, {"no": "TB-036", "name": "ヴィエノワ・スティック", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-036.jpg", "sub": "酒種液種・加糖液種法・プレーン＆チョコ2種 / 6本分（200g・分量そのまま）"}, {"no": "TB-037", "name": "ガーリックバジル塩パン＆フレッシュバジルチーズパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-037.jpg", "sub": "同じ生地で2種・アルミカップ揚げ焼き / 元6個分→5個分（150g換算）"}, {"no": "TB-038", "name": "韓国風チョコ塩バターパン", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-038.jpg", "sub": "酒種液種・ココア生地×有塩バター×ダークチョコ巻き込み / 5個分（150g）"}, {"no": "TB-039", "name": "バーガーバンズ", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-039.jpg", "sub": "スーパーキング＆全粒粉・セルクル型 / 元6個分→3個分（半量換算）"}, {"no": "TB-040", "name": "ソフトフランス生地で2種／ベーコンポテト＆あんバターフランス", "cat_name": "テーブルパン", "cat_color": "#F57F17", "photo_file": "TB-040.jpg", "sub": "TB-013と同じ生地・2種のフィリング / 5個分（150g換算）"}];
+const GIFT_DATA = {"defaults": {"storage": "冷凍でお渡しします。室温で自然解凍してください（夏場は冷蔵庫で解凍）。解凍後はなるべく当日中に。再冷凍は避けてください。", "reheat_ok": "解凍後、オーブンのパン温め機能、またはレンジ10〜20秒で温めるとよりおいしくなります。", "reheat_ng": "温めNG（{reason}）。解凍したままお召し上がりください。"}, "items": {"HA-007": {"d": "液種仕込みのバゲット。皮はパリッと、中はもっちり", "h": "ok", "a": "小麦", "src": "確定"}, "HA-008": {"d": "高加水でもっちり食感の小さなバゲット", "h": "ok", "a": "小麦", "src": "確定"}, "HA-009": {"d": "ふんわりソフトバゲットとめんたいフランスの2種", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "HA-010": {"d": "ポーリッシュ種で風味豊かな芳醇カンパーニュ", "h": "ok", "a": "小麦", "src": "確定"}, "HA-011": {"d": "香ばしいガーリックソルトの小さなブレッド", "h": "ok", "a": "小麦・乳", "src": "確定"}, "HA-012": {"d": "全粒粉とレーズンのセミハードブレッド", "h": "ok", "a": "小麦", "src": "確定"}, "HA-013": {"d": "ドライフルーツ入りのリュスティック", "h": "ok", "a": "小麦", "src": "確定"}, "HA-014": {"d": "酒種バジル生地にチーズとベーコンを巻いたツイスト", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "HA-015": {"d": "チョコとマカダミアナッツのフランスパン", "h": "ok", "a": "小麦・乳・マカダミアナッツ ※加工品は要確認", "src": "確定"}, "HA-020": {"d": "折りたたみ製法のパリッと香ばしいリュスティック", "h": "ok", "a": "小麦", "src": "確定"}, "HA-022": {"d": "紫蘇と3種のチーズを巻いたセミハードのクッペ", "h": "ok", "a": "小麦・乳", "src": "確定"}, "HA-023": {"d": "バリバリのクラストに3種チーズ入りのタイガーブレッド", "h": "ok", "a": "小麦・乳", "src": "確定"}, "HA-024": {"d": "クランベリーとホワイトチョコ、クリームチーズのクッペ", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "TB-006": {"d": "塩麹たまごとセロリのコッペパン", "h": "ok", "a": "小麦・卵・乳", "src": "確定"}, "TB-007": {"d": "はちみつときなこのやさしい甘さのパン", "h": "ok", "a": "小麦・乳・卵・大豆", "src": "確定"}, "TB-009": {"d": "クープにバターをのせたシンプルなプチハード", "h": "ok", "a": "小麦・乳", "src": "確定"}, "TB-010": {"d": "はちみつと生クリーム入りのミルキーなパン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "TB-013": {"d": "ガーリックバターたっぷりのソフトフランス", "h": "ok", "a": "小麦・乳", "src": "確定"}, "TB-014": {"d": "オリーブオイル入りの高加水チャバタ", "h": "ok", "a": "小麦", "src": "確定"}, "TB-029": {"d": "粒あんと有塩バターの甘じょっぱいパン", "h": "ok", "a": "小麦・乳・ごま ※加工品は要確認", "src": "確定"}, "TB-030": {"d": "さっくり食感の塩バターロール", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "TB-031": {"d": "バターがじゅわっと染みる基本の塩パン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "TB-033": {"d": "ピーナッツバターを巻き込んだロールパン", "h": "ok", "a": "小麦・乳・落花生 ※加工品は要確認", "src": "確定"}, "TB-034": {"d": "粒あんとバターを巻いたあんバターパン", "h": "ok", "a": "小麦・乳・ごま ※加工品は要確認", "src": "確定"}, "TB-035": {"d": "スキムミルク入りの翌日までふわふわバターロール", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "TB-036": {"d": "プレーンとチョコの2種のヴィエノワスティック", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "TB-037": {"d": "ガーリックバジル塩パンとバジルチーズパンの2種", "h": "ok", "a": "小麦・乳", "src": "確定"}, "TB-039": {"d": "白ごまをのせた手作りバーガーバンズ", "h": "ok", "a": "小麦・乳・卵・ごま", "src": "確定"}, "TB-040": {"d": "ベーコンポテトチーズとあんバターの2種のフランス", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-008": {"d": "もちもちコーンパンと枝豆ベーコンウインナーの2種", "h": "ok", "a": "小麦・乳・卵・豚肉・大豆 ※加工品は要確認", "src": "確定"}, "SO-011": {"d": "じゃがいもとクリームチーズ入りのクリーミーなパン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SO-012": {"d": "明太子とガーリックのプチフランス", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SO-013": {"d": "ほうれん草とベーコン、チーズの朝食ロール", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-018": {"d": "ウインナーを編み込んだ食べごたえのあるパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-019": {"d": "アスパラとベーコンのソフトフランス", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-021": {"d": "揚げないサクサクのカレーパン", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "SO-023": {"d": "香ばしいマヨとたまごのパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "SO-024": {"d": "じゃがいも入りでふわもちのコーンパン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SO-049": {"d": "チキンのラタトゥイユを包んだパン", "h": "ok", "a": "小麦・乳・鶏肉 ※加工品は要確認", "src": "確定"}, "SO-050": {"d": "ソーセージと炒め玉ねぎ、大葉のコッペパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-051": {"d": "チーズ入りカレーパン（焼きタイプ・揚げタイプ）", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SO-052": {"d": "カニカマとコーンのコールスロー風パン", "h": "ok", "a": "小麦・乳・卵・かに ※加工品は要確認", "src": "確定"}, "SO-054": {"d": "しらすとトマトのバジルチーズパン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SO-055": {"d": "ミートソースとロングソーセージのパン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SO-056": {"d": "ツナと明太子、コーンを包んだパン", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "SO-057": {"d": "イカのトマトガーリックをのせたピザ風パン", "h": "ok", "a": "小麦・乳・いか ※加工品は要確認", "src": "確定"}, "SO-058": {"d": "アスパラとベーコンの濃厚カルボナーラパン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SO-059": {"d": "焼きそばを包んだ焼きそばパン", "h": "ok", "a": "小麦・乳・卵・豚肉・大豆 ※加工品は要確認", "src": "確定"}, "SO-060": {"d": "マッシュルームとゴルゴンゾーラ、マカダミアのパン", "h": "ok", "a": "小麦・乳・豚肉・マカダミアナッツ ※加工品は要確認", "src": "確定"}, "SO-061": {"d": "ジョンソンヴィル・ガーリックとコーンのボート型パン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SO-062": {"d": "ズッキーニとベーコンのキッシュ風パン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SO-063": {"d": "あおさ香るたらこポテトのクッペ", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "SO-064": {"d": "カレー生地のジャーマンポテトパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "SO-065": {"d": "明太マヨとじゃがいも、大葉のパン", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "SO-066": {"d": "定番のマヨコーンパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "SO-067": {"d": "トマトとモッツァレラ、バジルのカプレーゼパン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SO-068": {"d": "エビとアボカドをのせたパン", "h": "ok", "a": "小麦・乳・卵・えび ※加工品は要確認", "src": "確定"}, "SO-069": {"d": "じゃがいもと野菜のスパニッシュオムレツパン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SH-011": {"d": "シナモンとレーズンの食パン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SH-025": {"d": "酒種で作る毎日食べたい食パン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SH-026": {"d": "マスカルポーネとはちみつのしっとり生食パン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SH-027": {"d": "全粒粉20%の酒種角食パン", "h": "ok", "a": "小麦・乳", "src": "確定"}, "SE-003": {"d": "桜エビとじゃがいも、枝豆の惣菜パン", "h": "ok", "a": "小麦・乳・えび・大豆", "src": "確定"}, "SE-004": {"d": "イチゴクリームをたっぷり挟んだマリトッツォ", "h": "ng:生クリームのため", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "SE-005": {"d": "桜あんとクリームチーズのセミハードパン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SE-006": {"d": "桜あんとクレームダマンドのうずまきパン", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "SE-007": {"d": "白パン生地の桜あんぱん", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SE-010": {"d": "チョコとクリームのハロウィンちぎりパン", "h": "ok", "a": "小麦・乳・卵・ヘーゼルナッツ ※加工品は要確認", "src": "確定"}, "SE-011": {"d": "かぼちゃ生地にレーズンを入れたジャンボパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "SE-013": {"d": "さつまいもあん入りのスイートポテトツイスト", "h": "ok", "a": "小麦・乳・卵・アーモンド", "src": "確定"}, "SE-017": {"d": "生とうもろこしとベーコン、アスパラ、クリームチーズのパン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "確定"}, "SE-018": {"d": "桃とカスタードをのせたスイーツパン", "h": "ok", "a": "小麦・乳・卵・もも", "src": "確定"}, "SE-019": {"d": "さつまいもとクリームチーズの秋のパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "SE-020": {"d": "抹茶と桜餡のマーブルブレッド", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SE-021": {"d": "マロンクリームと焦がしバター、ココア生地のパン", "h": "ok", "a": "小麦・乳・アーモンド ※加工品は要確認", "src": "確定"}, "SE-022": {"d": "コーヒー生地にマロンバターを重ねたフレーキー", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "SE-023": {"d": "紅茶香るりんごといちじくのロール。紅茶アイシングがけ", "h": "ok", "a": "小麦・乳・卵・りんご・アーモンド", "src": "確定"}, "SE-024": {"d": "よもぎ生地に餡バタークリームを挟んだミルクフランス", "h": "ng:バタークリームのため", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SE-025": {"d": "焦がしバターとラムレーズン入りかぼちゃあんぱん", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "SE-026": {"d": "かぼちゃクリームを絞った生ドーナツ", "h": "ng:生クリームのため", "a": "小麦・乳・卵", "src": "確定"}, "SE-027": {"d": "かぼちゃあんを巻いたねじりあんぱん", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "KA-004": {"d": "ピーナッツのシナモンロール", "h": "ok", "a": "小麦・乳・卵・落花生", "src": "確定"}, "KA-006": {"d": "ホワイトチョコをかけたふんわりシナモンロール", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "KA-007": {"d": "ワッフルシュガーのカリカリ甘いシュガーパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "KA-008": {"d": "ブルーベリーとクリームチーズのスイートパン", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "KA-010": {"d": "甘く煮たりんごを巻いた蜜リンゴパン", "h": "ok", "a": "小麦・乳・卵・りんご・アーモンド", "src": "確定"}, "KA-012": {"d": "チョコシートを折り込んだマフィン型パン", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "KA-014": {"d": "コーヒー生地のティラミス風マリトッツォ", "h": "ng:クリームのため", "a": "小麦・乳・卵", "src": "確定"}, "KA-022": {"d": "カスタードシートを巻いたツイストクリームパン", "h": "ok", "a": "小麦・乳・卵", "src": "確定"}, "KA-024": {"d": "アールグレイとオレンジピールのブレッド", "h": "ok", "a": "小麦・乳・オレンジ", "src": "確定"}, "KA-026": {"d": "濃い抹茶生地のホワイトチョコちぎりパン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "KA-038": {"d": "ココア生地に有塩バターとチョコの韓国風塩パン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "KA-046": {"d": "ラズベリージャムとクランブルのパン", "h": "ok", "a": "小麦・乳・卵・アーモンド ※加工品は要確認", "src": "確定"}, "KA-047": {"d": "アーモンドクリームとクランブルのパン", "h": "ok", "a": "小麦・乳・卵・アーモンド", "src": "確定"}, "KA-058": {"d": "はちみつソースがしみるロールパン", "h": "ng:バタークリームのため", "a": "小麦・乳・卵", "src": "確定"}, "KA-059": {"d": "メープルコーヒー生地のマカダミアといちじくのパン", "h": "ok", "a": "小麦・乳・マカダミアナッツ ※加工品は要確認", "src": "確定"}, "KA-060": {"d": "ラムレーズンとりんごのシナモンロール", "h": "ok", "a": "小麦・乳・卵・りんご・アーモンド", "src": "確定"}, "KA-061": {"d": "梅ジャムとクリームチーズのお花パン", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "確定"}, "KA-062": {"d": "梅とマスカルポーネ、ホワイトチョコのパン", "h": "ok", "a": "小麦・乳・アーモンド ※加工品は要確認", "src": "確定"}, "KA-063": {"d": "コーヒーダマンドとラムレーズンのロール。コーヒーアイシングがけ", "h": "ok", "a": "小麦・乳・卵・アーモンド", "src": "確定"}, "KA-064": {"d": "粒あん入りのきなこあんドーナツ", "h": "ok", "a": "小麦・乳・卵・大豆 ※加工品は要確認", "src": "確定"}, "KA-065": {"d": "黒糖コーヒーと胡桃レーズンのスコーン", "h": "ok", "a": "小麦・乳・くるみ", "src": "確定"}, "KA-066": {"d": "ミルクシートを折り込んだしっとり牛乳ぱん", "h": "ok", "a": "小麦・乳", "src": "確定"}, "PB-019": {"d": "ポルチーニとソーセージのピザ", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "確定"}, "PB-020": {"d": "トマトとモッツァレラのストロンボリ", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "確定"}, "PB-021": {"d": "ほうれん草とチーズのフォカッチャ", "h": "ok", "a": "小麦・乳", "src": "確定"}, "HA-001": {"d": "黒ごまソフトフランス 2種", "h": "ok", "a": "小麦・乳・ごま・豚肉 ※加工品は要確認", "src": "自動"}, "HA-002": {"d": "新玉ねぎ＆オリーブのバトンブレッド", "h": "ok", "a": "小麦・乳", "src": "自動"}, "HA-003": {"d": "おさつ尽くしの胡麻入りソフトフランス", "h": "ok", "a": "小麦・乳・ごま", "src": "自動"}, "HA-004": {"d": "ソフトミルクフランス", "h": "ok", "a": "小麦・乳", "src": "自動"}, "HA-005": {"d": "フランスあんぱん", "h": "ok", "a": "小麦・乳・ごま ※加工品は要確認", "src": "自動"}, "HA-006": {"d": "バゲット", "h": "ok", "a": "小麦", "src": "自動"}, "KA-001": {"d": "バニラの香る至福のメロンパン", "h": "ok", "a": "小麦・乳・卵・アーモンド", "src": "自動"}, "KA-002": {"d": "ミルクコッペ", "h": "ok", "a": "小麦・乳・卵", "src": "自動"}, "KA-003": {"d": "コーヒーナッツロール", "h": "ok", "a": "小麦・乳・卵・アーモンド・くるみ・もも", "src": "自動"}, "PB-001": {"d": "カマンベールハニーフォカッチャ", "h": "ok", "a": "小麦・乳", "src": "自動"}, "PB-002": {"d": "手乗りピッツァ マルゲリータ", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "PB-003": {"d": "王道のピザパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "PB-004": {"d": "もっちりしらすフォカッチャ", "h": "ok", "a": "小麦", "src": "自動"}, "PB-005": {"d": "マルゲリータ", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "自動"}, "PB-006": {"d": "しらすと半熟卵のピザ", "h": "ok", "a": "小麦・乳・卵", "src": "自動"}, "PB-007": {"d": "クアトロフォルマッジ", "h": "ok", "a": "小麦・乳", "src": "自動"}, "PB-008": {"d": "本格フォカッチャ", "h": "ok", "a": "小麦", "src": "自動"}, "PB-009": {"d": "ヨーグルトフォカッチャ", "h": "ok", "a": "小麦・乳", "src": "自動"}, "PB-010": {"d": "惣菜フォカッチャ", "h": "ok", "a": "小麦・乳・大豆", "src": "自動"}, "PB-011": {"d": "簡単フォカッチャ", "h": "ok", "a": "小麦", "src": "自動"}, "PB-012": {"d": "バジルフォカッチャ", "h": "ok", "a": "小麦・乳", "src": "自動"}, "PB-013": {"d": "ツナコーンフォカッチャ", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "自動"}, "PB-014": {"d": "スモークチキンピザ", "h": "ok", "a": "小麦・乳・鶏肉 ※加工品は要確認", "src": "自動"}, "PB-015": {"d": "フォカッチャサンド", "h": "ok", "a": "小麦", "src": "自動"}, "PB-016": {"d": "シナモンレーズンベーグル", "h": "ok", "a": "小麦・乳", "src": "自動"}, "PB-017": {"d": "冷蔵発酵ベーグル", "h": "ok", "a": "小麦・乳・ごま・豚肉 ※加工品は要確認", "src": "自動"}, "PB-018": {"d": "2種のベーグル", "h": "ok", "a": "小麦・乳", "src": "自動"}, "SE-001": {"d": "サツマイモのペストリー風", "h": "ok", "a": "小麦・乳・卵・ごま", "src": "自動"}, "SE-002": {"d": "レモンティーブレッド", "h": "ok", "a": "小麦・乳・卵・アーモンド", "src": "自動"}, "SH-001": {"d": "練乳キューブ食パン", "h": "ok", "a": "小麦・乳", "src": "自動"}, "SH-002": {"d": "リッチホテルブレッド", "h": "ok", "a": "小麦・乳・卵", "src": "自動"}, "SO-001": {"d": "玉ねぎとツナのパン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "自動"}, "SO-002": {"d": "目玉焼きパン", "h": "ok", "a": "小麦・乳・卵・豚肉 ※加工品は要確認", "src": "自動"}, "SO-003": {"d": "じゃがマヨベーコンパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "SO-004": {"d": "シーフードグラタン惣菜パン", "h": "ok", "a": "小麦・乳・卵", "src": "自動"}, "SO-005": {"d": "ハムマヨコーンパン＆ウィンナーパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "SO-006": {"d": "薄焼きコーンパン（ベーコン＆チーズ）", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "SO-007": {"d": "全粒粉のクープパン", "h": "ok", "a": "小麦・乳・豚肉 ※加工品は要確認", "src": "自動"}, "TB-001": {"d": "レーズンバターの塩パン", "h": "ok", "a": "小麦・乳", "src": "自動"}, "TB-002": {"d": "卵黄バターロール（プレーン＆チョコ）", "h": "ok", "a": "小麦・乳・卵 ※加工品は要確認", "src": "自動"}, "TB-003": {"d": "全粒粉バンズ", "h": "ok", "a": "小麦・乳", "src": "自動"}, "TB-004": {"d": "香ばしセサミチーズブレッド", "h": "ok", "a": "小麦・乳・ごま", "src": "自動"}, "TB-005": {"d": "ふんわりホットドック", "h": "ok", "a": "小麦・乳・卵", "src": "自動"}, "TB-038": {"d": "韓国風チョコ塩バターパン", "h": "ok", "a": "小麦・乳 ※加工品は要確認", "src": "自動"}}};
+const PHOTO_MTIME = {"HA-001.jpg": 1782564955, "HA-002.jpg": 1782564955, "HA-003.jpg": 1782564955, "HA-004.jpg": 1782564955, "HA-005.jpg": 1782564963, "HA-006.jpg": 1782564963, "HA-007.jpg": 1782564956, "HA-008.jpg": 1782564965, "HA-009.jpg": 1782564965, "HA-010.jpg": 1782564955, "HA-011.jpg": 1782564964, "HA-012.jpg": 1782564955, "HA-013.jpg": 1783264197, "HA-014.jpg": 1783140242, "HA-015.jpg": 1783346159, "HA-020.jpg": 1782564966, "HA-022.jpg": 1786858087, "HA-023.jpg": 1792311648, "HA-024.jpg": 1793455925, "KA-001.jpg": 1782373299, "KA-002.jpg": 1782630992, "KA-003.jpg": 1782564955, "KA-004.jpg": 1791095609, "KA-006.jpg": 1782564957, "KA-007.jpg": 1782564963, "KA-008.jpg": 1782564965, "KA-010.jpg": 1782564964, "KA-012.jpg": 1782564955, "KA-014.jpg": 1782564973, "KA-022.jpg": 1782564965, "KA-024.jpg": 1782564964, "KA-026.jpg": 1782564964, "KA-046.jpg": 1782564955, "KA-047.jpg": 1782564964, "KA-058.jpg": 1785419183, "KA-059.jpg": 1785419604, "KA-060.jpg": 1785422822, "KA-061.jpg": 1786454692, "KA-062.jpg": 1786454608, "KA-063.jpg": 1791095497, "KA-064.jpg": 1791096127, "KA-065.jpg": 1792311821, "KA-066.jpg": 1792311483, "PB-001.jpg": 1782564955, "PB-002.jpg": 1782564957, "PB-003.jpg": 1782654250, "PB-004.jpg": 1782630891, "PB-005.jpg": 1782564963, "PB-006.jpg": 1782564957, "PB-007.jpg": 1782564966, "PB-008.jpg": 1782564956, "PB-009.jpg": 1782564957, "PB-010.jpg": 1782564964, "PB-011.jpg": 1782564956, "PB-012.jpg": 1782564957, "PB-013.jpg": 1782564956, "PB-014.jpg": 1782564962, "PB-015.jpg": 1782564963, "PB-016.jpg": 1782564956, "PB-017.jpg": 1782564956, "PB-018.jpg": 1782564967, "PB-019.jpg": 1782564965, "PB-020.jpg": 1782564965, "PB-021.jpg": 1782564955, "SE-001.jpg": 1782564974, "SE-002.jpg": 1782564955, "SE-003.jpg": 1783515947, "SE-004.jpg": 1782564973, "SE-005.jpg": 1782564961, "SE-006.jpg": 1782564963, "SE-007.jpg": 1782564962, "SE-010.jpg": 1782564961, "SE-011.jpg": 1782564956, "SE-013.jpg": 1782564965, "SE-017.jpg": 1784535762, "SE-018.jpg": 1784520316, "SE-019.jpg": 1785422193, "SE-020.jpg": 1782564964, "SE-021.jpg": 1786857996, "SE-022.jpg": 1787813985, "SE-023.jpg": 1791095013, "SE-024.jpg": 1792311581, "SE-025.jpg": 1792311710, "SE-027.jpg": 1793456264, "SH-001.jpg": 1782564955, "SH-002.jpg": 1782654077, "SH-011.jpg": 1782564964, "SH-025.jpg": 1785422979, "SH-026.jpg": 1787813762, "SH-027.jpg": 1793455792, "SO-001.jpg": 1782564955, "SO-002.jpg": 1782652910, "SO-003.jpg": 1782564955, "SO-004.jpg": 1782564955, "SO-005.jpg": 1782564955, "SO-006.jpg": 1782564955, "SO-007.jpg": 1782651815, "SO-008.jpg": 1782564956, "SO-011.jpg": 1782564955, "SO-012.jpg": 1782564955, "SO-013.jpg": 1782564955, "SO-018.jpg": 1782564966, "SO-019.jpg": 1782564956, "SO-021.jpg": 1782564966, "SO-023.jpg": 1782564964, "SO-024.jpg": 1782564963, "SO-049.jpg": 1783516171, "SO-050.jpg": 1784519467, "SO-051.jpg": 1784519583, "SO-052.jpg": 1784519942, "SO-054.jpg": 1785420411, "SO-055.jpg": 1784520921, "SO-056.jpg": 1785422030, "SO-057.jpg": 1786454291, "SO-058.jpg": 1786454375, "SO-059.jpg": 1786454782, "SO-060.jpg": 1787814094, "SO-061.jpg": 1787814222, "SO-062.jpg": 1787814658, "SO-063.jpg": 1789622196, "SO-064.jpg": 1791095146, "SO-065.jpg": 1791095211, "SO-066.jpg": 1791095841, "SO-067.jpg": 1792311874, "SO-068.jpg": 1793456054, "SO-069.jpg": 1793456346, "TB-001.jpg": 1782564955, "TB-002.jpg": 1782564955, "TB-003.jpg": 1782564955, "TB-005.jpg": 1782564955, "TB-006.jpg": 1784519300, "TB-007.jpg": 1782564964, "TB-009.jpg": 1782564956, "TB-010.jpg": 1782564966, "TB-013.jpg": 1782564966, "TB-029.jpg": 1782564963, "TB-030.jpg": 1782564965, "TB-031.jpg": 1782564955, "TB-033.jpg": 1782564964, "TB-034.jpg": 1782564964, "TB-035.jpg": 1787814377, "TB-036.jpg": 1789622283, "TB-037.jpg": 1789622007, "TB-038.jpg": 1789621782, "TB-039.jpg": 1791094809, "TB-040.jpg": 1791095743};
+const CAT_EMOJI = {'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸','テーブルパン':'🧈','ピザ・ベーグル':'🍕'};
+
+let selectedNos = [];
+let catFilter = 'すべて';
+let searchQuery = '';
+
+function photoPath(r) {
+  if (!r.photo_file) return null;
+  const v = PHOTO_MTIME[r.photo_file] || '0';
+  return `photos/${r.photo_file}?v=${v}`;
+}
+
+function getItem(no) { return (GIFT_DATA.items || {})[no] || null; }
+
+function getCats() {
+  const seen = new Set(); const cats = ['すべて'];
+  RECIPES.forEach(r => { if (!seen.has(r.cat_name)) { seen.add(r.cat_name); cats.push(r.cat_name); } });
+  return cats;
+}
+
+function filteredRecipes() {
+  const q = searchQuery.toLowerCase();
+  return RECIPES.filter(r =>
+    (catFilter === 'すべて' || r.cat_name === catFilter) &&
+    (!q || r.name.toLowerCase().includes(q) || r.no.toLowerCase().includes(q))
+  );
+}
+
+// カテゴリフィルター
+function renderCats() {
+  const wrap = document.getElementById('cat-filter');
+  wrap.innerHTML = '';
+  getCats().forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat === catFilter ? ' active' : '');
+    btn.textContent = cat === 'すべて' ? 'すべて' : (CAT_EMOJI[cat]||'') + ' ' + cat;
+    btn.addEventListener('click', () => { catFilter = cat; renderCats(); renderList(); });
+    wrap.appendChild(btn);
+  });
+}
+
+// レシピ一覧
+function renderList() {
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = '';
+  filteredRecipes().forEach(r => {
+    const checked = selectedNos.includes(r.no);
+    const item = getItem(r.no);
+    const isAuto = item && item.src === '自動';
+    const isMiss = !item;
+    const div = document.createElement('div');
+    div.className = 'recipe-item' + (checked ? ' checked' : '');
+    const photo = photoPath(r);
+    const thumbHtml = photo
+      ? `<img class="recipe-thumb" src="${photo}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy"><div class="recipe-thumb-ph" style="display:none">${CAT_EMOJI[r.cat_name]||'🍞'}</div>`
+      : `<div class="recipe-thumb-ph">${CAT_EMOJI[r.cat_name]||'🍞'}</div>`;
+    const badgeHtml = isMiss
+      ? '<span class="badge-miss">未記入</span>'
+      : (isAuto ? '<span class="badge-auto">自動下書き</span>' : '');
+    div.innerHTML = `<input type="checkbox" class="recipe-cb" ${checked ? 'checked' : ''} onclick="event.stopPropagation();toggleSelect('${r.no}')">${thumbHtml}<div class="recipe-info"><div class="recipe-name">${r.name}</div><div class="recipe-no">${r.no}</div></div>${badgeHtml}`;
+    div.addEventListener('click', () => toggleSelect(r.no));
+    list.appendChild(div);
+  });
+  document.getElementById('sel-count').textContent = selectedNos.length + '件選択中';
+  document.getElementById('print-btn').disabled = selectedNos.length === 0;
+}
+
+function toggleSelect(no) {
+  const idx = selectedNos.indexOf(no);
+  if (idx >= 0) selectedNos.splice(idx, 1);
+  else selectedNos.push(no);
+  renderList();
+  renderPreview();
+}
+
+function clearAll() {
+  selectedNos = [];
+  renderList();
+  renderPreview();
+}
+
+// プレビュー
+function rerender() { renderPreview(); }
+
+function reheatText(h) {
+  const defs = GIFT_DATA.defaults || {};
+  if (!h || h === 'ok') return { text: defs.reheat_ok || '', ng: false };
+  if (h.startsWith('ng:')) {
+    const reason = h.slice(3);
+    const tmpl = defs.reheat_ng || '温めNG（{reason}）。解凍したままお召し上がりください。';
+    return { text: tmpl.replace('{{reason}}', reason), ng: true };
+  }
+  return { text: h, ng: false };
+}
+
+function buildCard(no, perSheet, withPhoto) {
+  const recipe = RECIPES.find(r => r.no === no);
+  if (!recipe) return '<div class="item-card"><div class="item-miss">データなし</div></div>';
+  const item = getItem(no);
+  const photo = photoPath(recipe);
+  let photoHtml = '';
+  const photoHeights = { 4: '32mm', 6: '22mm', 8: '15mm' };
+  const ph = photoHeights[perSheet] || '22mm';
+  if (withPhoto && photo) {
+    photoHtml = `<img class="item-photo" src="${photo}" alt="${recipe.name}" style="height:${ph}" onerror="this.style.display='none'">`;
+  } else if (withPhoto && !photo) {
+    photoHtml = `<div class="item-photo-ph" style="height:${ph}">${CAT_EMOJI[recipe.cat_name]||'🍞'}</div>`;
+  }
+  if (!item) {
+    return `<div class="item-card">${photoHtml}<div class="item-body"><div class="item-no">${no}</div><div class="item-name">${recipe.name}</div><div class="item-miss" style="font-size:7pt;color:#c0392b;padding:1mm 0;">⚠ ギフトデータ未登録</div></div></div>`;
+  }
+  const rh = reheatText(item.h);
+  const reheatHtml = rh.text
+    ? `<div class="item-reheat ${rh.ng ? 'ng-heat' : 'ok-heat'}">🌡 ${rh.text}</div>`
+    : '';
+  const allergyHtml = item.a
+    ? `<div class="item-allergy"><strong>アレルゲン：</strong>${item.a}</div>`
+    : '';
+  const descHtml = item.d ? `<div class="item-desc">${item.d}</div>` : '';
+  return `<div class="item-card">${photoHtml}<div class="item-body"><div class="item-no">${no}</div><div class="item-name">${recipe.name}</div>${descHtml}${reheatHtml}${allergyHtml}</div></div>`;
+}
+
+function buildSheet(nos, perSheet, withPhoto, recipient, dateStr, sheetIdx, totalSheets) {
+  const gridClass = { 4:'grid-2x2', 6:'grid-2x3', 8:'grid-2x4' }[perSheet] || 'grid-2x3';
+  const itemsHtml = nos.map(no => buildCard(no, perSheet, withPhoto)).join('');
+  const toHtml = recipient
+    ? `<div class="sheet-to"><span>To</span>${recipient} さんへ</div>`
+    : `<div class="sheet-to"><span>To</span>　　　　　　　 さんへ</div>`;
+  const dateHtml = dateStr || new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'});
+  const pageLabel = totalSheets > 1 ? ` (${sheetIdx+1}/${totalSheets})` : '';
+  const defs = GIFT_DATA.defaults || {};
+  const storageText = defs.storage || '';
+  return `<div class="sheet">
+  <div class="sheet-header">
+    ${toHtml}
+    <div class="sheet-from">NYKMAMAのパン${pageLabel}<br>${dateHtml}</div>
+  </div>
+  <div class="sheet-items ${gridClass}">${itemsHtml}</div>
+  <div class="sheet-footer">
+    <div class="storage-text">📦 ${storageText}</div>
+    <div class="sheet-disclaimer">原材料は加工品を含め必ず現物の表示でご確認ください</div>
+  </div>
+</div>`;
+}
+
+function renderPreview() {
+  const scroll = document.getElementById('preview-scroll');
+  const empty = document.getElementById('preview-empty');
+  const perSheet = parseInt(document.getElementById('per-sheet').value);
+  const withPhoto = document.getElementById('with-photo').value === '1';
+  const recipient = document.getElementById('recipient').value.trim();
+  const rawDate = document.getElementById('gift-date').value;
+  const dateStr = rawDate ? new Date(rawDate).toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric'}) : '';
+  document.getElementById('sel-count').textContent = selectedNos.length + '件選択中';
+  document.getElementById('print-btn').disabled = selectedNos.length === 0;
+  if (selectedNos.length === 0) {
+    scroll.innerHTML = '';
+    scroll.appendChild(empty);
+    empty.style.display = '';
+    return;
+  }
+  empty.style.display = 'none';
+  // ページ分割
+  const pages = [];
+  for (let i = 0; i < selectedNos.length; i += perSheet) {
+    pages.push(selectedNos.slice(i, i + perSheet));
+  }
+  scroll.innerHTML = pages.map((nos, idx) =>
+    buildSheet(nos, perSheet, withPhoto, recipient, dateStr, idx, pages.length)
+  ).join('');
+}
+
+function handlePrint() {
+  const autoItems = selectedNos.filter(no => {
+    const item = getItem(no);
+    return item && item.src === '自動';
+  });
+  if (autoItems.length > 0) {
+    const names = autoItems.map(no => {
+      const r = RECIPES.find(x => x.no === no);
+      return (r ? r.name : no);
+    }).join('、');
+    if (!confirm(`「自動下書き」の項目が${autoItems.length}件含まれています。\n\n${names}\n\n内容を確認の上、印刷してください。続けますか？`)) return;
+  }
+  window.print();
+}
+
+// 日付の初期値を今日に
+document.getElementById('gift-date').value = new Date().toISOString().slice(0,10);
+
+document.getElementById('search-input').addEventListener('input', e => {
+  searchQuery = e.target.value.trim();
+  renderList();
+});
+
+renderCats();
+renderList();
+renderPreview();
+</script>
+</body>
+</html>

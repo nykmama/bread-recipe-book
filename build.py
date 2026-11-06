@@ -717,7 +717,10 @@ def build_index_html():
       <p class="subtitle-main"><span class="e-spin" style="font-size:13px;">🌸</span> きみたちが食べてくれた分だけ、幸せなレシピが増えた。</p>
       <p class="subtitle" id="count-label"></p>
     </div>
-    <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
+    <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;margin-top:2px;">
+      <a class="pdf-btn" href="output/bread_recipes.pdf" download="パンレシピ集.pdf">📄 PDF</a>
+      <a class="pdf-btn" href="gift.html" style="background:#6a3d7a;">🎁 おすそ分けシート</a>
+    </div>
   </div>
 </header>
 <div class="search-wrap">
@@ -868,6 +871,670 @@ renderFilters(); renderGrid();
         print(f'iCloud Drive フォルダが見つかりません（スキップ）: {ICLOUD_DIR}')
 
 
+def build_gift_html():
+    recipe_files = sorted(glob.glob('recipes/*.json'))
+    recipes_slim = []
+    for f in recipe_files:
+        with open(f, encoding='utf-8') as fp:
+            r = json.load(fp)
+        recipes_slim.append({
+            'no': r.get('no',''),
+            'name': r.get('name',''),
+            'cat_name': r.get('cat_name',''),
+            'cat_color': r.get('cat_color','#888'),
+            'photo_file': r.get('photo_file',''),
+            'sub': r.get('sub',''),
+        })
+
+    gift_path = os.path.join('gift', 'gift_data.json')
+    if os.path.exists(gift_path):
+        with open(gift_path, encoding='utf-8') as fp:
+            gift_data = json.load(fp)
+    else:
+        gift_data = {'defaults': {}, 'items': {}}
+
+    recipes_json = json.dumps(recipes_slim, ensure_ascii=False)
+    gift_json = json.dumps(gift_data, ensure_ascii=False)
+
+    photo_mtime = {}
+    for fpath in glob.glob('photos/*'):
+        fname = os.path.basename(fpath)
+        photo_mtime[fname] = int(os.path.getmtime(fpath))
+    photo_mtime_json = json.dumps(photo_mtime, ensure_ascii=False)
+
+    html = f'''<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おすそ分けシート – NYKMAMAのパンレシピ</title>
+<style>
+:root {{
+  --bg: #faf8f5;
+  --card-bg: #fff;
+  --text: #2c2c2c;
+  --sub: #777;
+  --border: #e8e4de;
+  --accent: #6a3d7a;
+  --red: #c0392b;
+}}
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{
+  font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}}
+/* ── スクリーン用レイアウト ── */
+.screen-header {{
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}}
+.screen-header h1 {{ font-size: 18px; font-weight: 800; color: var(--accent); flex: 1; }}
+.screen-header a {{ font-size: 12px; color: #888; text-decoration: none; }}
+.screen-header a:hover {{ color: var(--text); }}
+.main-layout {{
+  display: flex;
+  height: calc(100vh - 54px);
+}}
+/* 左：レシピ一覧 */
+.sidebar {{
+  width: 340px;
+  min-width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+}}
+.sidebar-top {{
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}}
+.search-input {{
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 14px 8px 36px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #faf8f5 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 11px center;
+  outline: none;
+  color: #2c2c2c;
+}}
+.search-input:focus {{ border-color: var(--accent); }}
+.cat-filter {{
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}}
+.cat-filter::-webkit-scrollbar {{ display: none; }}
+.cat-btn {{
+  flex-shrink: 0;
+  border: none;
+  border-radius: 14px;
+  padding: 5px 11px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: #f0ede8;
+  color: #555;
+  white-space: nowrap;
+}}
+.cat-btn.active {{ color: #fff; background: var(--accent); }}
+.selected-count {{
+  font-size: 11px;
+  color: var(--sub);
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #faf8f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}}
+.clear-btn {{
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0;
+}}
+.recipe-list {{
+  overflow-y: auto;
+  flex: 1;
+}}
+.recipe-item {{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #f5f3f0;
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}}
+.recipe-item:hover {{ background: #faf8f5; }}
+.recipe-item.checked {{ background: #f4eef7; }}
+.recipe-cb {{ width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }}
+.recipe-thumb {{
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #ede8e0;
+}}
+.recipe-thumb-ph {{
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: #ede8e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}}
+.recipe-info {{ flex: 1; min-width: 0; }}
+.recipe-name {{ font-size: 13px; font-weight: 700; color: #2c2c2c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+.recipe-no {{ font-size: 10px; color: #aaa; font-weight: 600; }}
+.badge-auto {{
+  font-size: 9px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}}
+.badge-miss {{
+  font-size: 9px;
+  background: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}}
+/* 右：プレビューエリア */
+.preview-area {{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}}
+.controls-bar {{
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}}
+.ctrl-group {{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}}
+.ctrl-group label {{ font-size: 12px; color: var(--sub); font-weight: 600; }}
+.ctrl-input {{
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: #faf8f5;
+  outline: none;
+}}
+.ctrl-input:focus {{ border-color: var(--accent); }}
+.ctrl-select {{
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: #faf8f5;
+  outline: none;
+  cursor: pointer;
+}}
+.print-btn {{
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}}
+.print-btn:disabled {{ background: #ccc; cursor: not-allowed; }}
+.print-btn:not(:disabled):active {{ opacity: 0.85; }}
+.preview-scroll {{
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #e8e4de;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}}
+.preview-empty {{
+  color: var(--sub);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 60px;
+}}
+/* ── A4シート ── */
+.sheet {{
+  background: #fff;
+  width: 210mm;
+  min-height: 297mm;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  padding: 10mm;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex-shrink: 0;
+}}
+.sheet-header {{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 0.5mm solid #2c2c2c;
+}}
+.sheet-to {{
+  font-size: 14pt;
+  font-weight: 800;
+  color: #2c2c2c;
+  min-width: 60mm;
+}}
+.sheet-to span {{ font-size: 9pt; color: #888; font-weight: 500; display: block; margin-bottom: 1mm; }}
+.sheet-from {{
+  font-size: 9pt;
+  color: #888;
+  text-align: right;
+  line-height: 1.6;
+}}
+.sheet-items {{
+  flex: 1;
+  display: grid;
+  gap: 3mm;
+}}
+.grid-2x2 {{ grid-template-columns: 1fr 1fr; }}
+.grid-2x3 {{ grid-template-columns: 1fr 1fr; }}
+.grid-2x4 {{ grid-template-columns: 1fr 1fr; }}
+.item-card {{
+  border: 0.3mm solid #d8d0be;
+  border-radius: 2mm;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fffdf8;
+}}
+.item-photo {{
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  background: #f0ede8;
+}}
+.item-photo-ph {{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0ede8;
+  font-size: 24pt;
+  color: #ccc;
+}}
+.item-body {{
+  padding: 2mm 3mm 2.5mm;
+  flex: 1;
+}}
+.item-no {{ font-size: 7pt; color: #aaa; font-weight: 700; margin-bottom: 0.5mm; }}
+.item-name {{ font-size: 10pt; font-weight: 800; color: #2c2c2c; line-height: 1.3; margin-bottom: 1mm; }}
+.item-desc {{ font-size: 7.5pt; color: #555; line-height: 1.4; margin-bottom: 1.5mm; }}
+.item-reheat {{ font-size: 7pt; line-height: 1.4; margin-bottom: 1mm; }}
+.item-reheat.ok-heat {{ color: #2c2c2c; }}
+.item-reheat.ng-heat {{ color: var(--red); font-weight: 700; }}
+.item-allergy {{ font-size: 6.5pt; color: #666; line-height: 1.4; }}
+.item-allergy strong {{ color: #2c2c2c; font-weight: 700; }}
+.item-miss {{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9pt;
+  color: #aaa;
+  font-style: italic;
+  flex: 1;
+  padding: 4mm;
+}}
+.sheet-footer {{
+  margin-top: 4mm;
+  padding-top: 3mm;
+  border-top: 0.3mm solid #d8d0be;
+  font-size: 7pt;
+  color: #555;
+  line-height: 1.6;
+}}
+.sheet-footer .storage-text {{ margin-bottom: 1.5mm; }}
+.sheet-disclaimer {{
+  margin-top: 2mm;
+  font-size: 6pt;
+  color: #aaa;
+  text-align: right;
+}}
+/* ── 印刷 ── */
+@media print {{
+  .no-print {{ display: none !important; }}
+  body {{ background: #fff; }}
+  .preview-scroll {{ background: #fff; padding: 0; gap: 0; }}
+  .sheet {{
+    box-shadow: none;
+    page-break-after: always;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+  }}
+  .sheet:last-child {{ page-break-after: auto; }}
+}}
+@page {{
+  size: A4;
+  margin: 0;
+}}
+</style>
+</head>
+<body>
+<header class="screen-header no-print">
+  <h1>🎁 おすそ分けシート</h1>
+  <a href="index.html">← レシピ一覧に戻る</a>
+</header>
+<div class="main-layout">
+  <!-- 左サイドバー -->
+  <aside class="sidebar no-print">
+    <div class="sidebar-top">
+      <input class="search-input" id="search-input" type="search" placeholder="名前で絞り込み">
+      <div class="cat-filter" id="cat-filter"></div>
+    </div>
+    <div class="selected-count">
+      <span id="sel-count">0件選択中</span>
+      <button class="clear-btn" id="clear-btn" onclick="clearAll()">すべて解除</button>
+    </div>
+    <div class="recipe-list" id="recipe-list"></div>
+  </aside>
+  <!-- 右プレビューエリア -->
+  <div class="preview-area">
+    <div class="controls-bar no-print">
+      <div class="ctrl-group">
+        <label>宛名</label>
+        <input class="ctrl-input" id="recipient" type="text" placeholder="○○さんへ" style="width:140px;" oninput="rerender()">
+      </div>
+      <div class="ctrl-group">
+        <label>日付</label>
+        <input class="ctrl-input" id="gift-date" type="date" oninput="rerender()">
+      </div>
+      <div class="ctrl-group">
+        <label>1枚あたり</label>
+        <select class="ctrl-select" id="per-sheet" onchange="rerender()">
+          <option value="4">4品</option>
+          <option value="6" selected>6品</option>
+          <option value="8">8品</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <label>写真</label>
+        <select class="ctrl-select" id="with-photo" onchange="rerender()">
+          <option value="1">あり</option>
+          <option value="0">なし</option>
+        </select>
+      </div>
+      <button class="print-btn" id="print-btn" disabled onclick="handlePrint()">🖨️ 印刷</button>
+    </div>
+    <div class="preview-scroll" id="preview-scroll">
+      <div class="preview-empty" id="preview-empty">左のリストからパンを選択してください</div>
+    </div>
+  </div>
+</div>
+<script>
+const RECIPES = {recipes_json};
+const GIFT_DATA = {gift_json};
+const PHOTO_MTIME = {photo_mtime_json};
+const CAT_EMOJI = {{'食パン':'🍞','ハード系':'🥖','惣菜パン':'🥗','菓子パン':'🍫','季節系':'🌸','テーブルパン':'🧈','ピザ・ベーグル':'🍕'}};
+
+let selectedNos = [];
+let catFilter = 'すべて';
+let searchQuery = '';
+
+function photoPath(r) {{
+  if (!r.photo_file) return null;
+  const v = PHOTO_MTIME[r.photo_file] || '0';
+  return `photos/${{r.photo_file}}?v=${{v}}`;
+}}
+
+function getItem(no) {{ return (GIFT_DATA.items || {{}})[no] || null; }}
+
+function getCats() {{
+  const seen = new Set(); const cats = ['すべて'];
+  RECIPES.forEach(r => {{ if (!seen.has(r.cat_name)) {{ seen.add(r.cat_name); cats.push(r.cat_name); }} }});
+  return cats;
+}}
+
+function filteredRecipes() {{
+  const q = searchQuery.toLowerCase();
+  return RECIPES.filter(r =>
+    (catFilter === 'すべて' || r.cat_name === catFilter) &&
+    (!q || r.name.toLowerCase().includes(q) || r.no.toLowerCase().includes(q))
+  );
+}}
+
+// カテゴリフィルター
+function renderCats() {{
+  const wrap = document.getElementById('cat-filter');
+  wrap.innerHTML = '';
+  getCats().forEach(cat => {{
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (cat === catFilter ? ' active' : '');
+    btn.textContent = cat === 'すべて' ? 'すべて' : (CAT_EMOJI[cat]||'') + ' ' + cat;
+    btn.addEventListener('click', () => {{ catFilter = cat; renderCats(); renderList(); }});
+    wrap.appendChild(btn);
+  }});
+}}
+
+// レシピ一覧
+function renderList() {{
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = '';
+  filteredRecipes().forEach(r => {{
+    const checked = selectedNos.includes(r.no);
+    const item = getItem(r.no);
+    const isAuto = item && item.src === '自動';
+    const isMiss = !item;
+    const div = document.createElement('div');
+    div.className = 'recipe-item' + (checked ? ' checked' : '');
+    const photo = photoPath(r);
+    const thumbHtml = photo
+      ? `<img class="recipe-thumb" src="${{photo}}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy"><div class="recipe-thumb-ph" style="display:none">${{CAT_EMOJI[r.cat_name]||'🍞'}}</div>`
+      : `<div class="recipe-thumb-ph">${{CAT_EMOJI[r.cat_name]||'🍞'}}</div>`;
+    const badgeHtml = isMiss
+      ? '<span class="badge-miss">未記入</span>'
+      : (isAuto ? '<span class="badge-auto">自動下書き</span>' : '');
+    div.innerHTML = `<input type="checkbox" class="recipe-cb" ${{checked ? 'checked' : ''}} onclick="event.stopPropagation();toggleSelect('${{r.no}}')">${{thumbHtml}}<div class="recipe-info"><div class="recipe-name">${{r.name}}</div><div class="recipe-no">${{r.no}}</div></div>${{badgeHtml}}`;
+    div.addEventListener('click', () => toggleSelect(r.no));
+    list.appendChild(div);
+  }});
+  document.getElementById('sel-count').textContent = selectedNos.length + '件選択中';
+  document.getElementById('print-btn').disabled = selectedNos.length === 0;
+}}
+
+function toggleSelect(no) {{
+  const idx = selectedNos.indexOf(no);
+  if (idx >= 0) selectedNos.splice(idx, 1);
+  else selectedNos.push(no);
+  renderList();
+  renderPreview();
+}}
+
+function clearAll() {{
+  selectedNos = [];
+  renderList();
+  renderPreview();
+}}
+
+// プレビュー
+function rerender() {{ renderPreview(); }}
+
+function reheatText(h) {{
+  const defs = GIFT_DATA.defaults || {{}};
+  if (!h || h === 'ok') return {{ text: defs.reheat_ok || '', ng: false }};
+  if (h.startsWith('ng:')) {{
+    const reason = h.slice(3);
+    const tmpl = defs.reheat_ng || '温めNG（{{reason}}）。解凍したままお召し上がりください。';
+    return {{ text: tmpl.replace('{{{{reason}}}}', reason), ng: true }};
+  }}
+  return {{ text: h, ng: false }};
+}}
+
+function buildCard(no, perSheet, withPhoto) {{
+  const recipe = RECIPES.find(r => r.no === no);
+  if (!recipe) return '<div class="item-card"><div class="item-miss">データなし</div></div>';
+  const item = getItem(no);
+  const photo = photoPath(recipe);
+  let photoHtml = '';
+  const photoHeights = {{ 4: '32mm', 6: '22mm', 8: '15mm' }};
+  const ph = photoHeights[perSheet] || '22mm';
+  if (withPhoto && photo) {{
+    photoHtml = `<img class="item-photo" src="${{photo}}" alt="${{recipe.name}}" style="height:${{ph}}" onerror="this.style.display='none'">`;
+  }} else if (withPhoto && !photo) {{
+    photoHtml = `<div class="item-photo-ph" style="height:${{ph}}">${{CAT_EMOJI[recipe.cat_name]||'🍞'}}</div>`;
+  }}
+  if (!item) {{
+    return `<div class="item-card">${{photoHtml}}<div class="item-body"><div class="item-no">${{no}}</div><div class="item-name">${{recipe.name}}</div><div class="item-miss" style="font-size:7pt;color:#c0392b;padding:1mm 0;">⚠ ギフトデータ未登録</div></div></div>`;
+  }}
+  const rh = reheatText(item.h);
+  const reheatHtml = rh.text
+    ? `<div class="item-reheat ${{rh.ng ? 'ng-heat' : 'ok-heat'}}">🌡 ${{rh.text}}</div>`
+    : '';
+  const allergyHtml = item.a
+    ? `<div class="item-allergy"><strong>アレルゲン：</strong>${{item.a}}</div>`
+    : '';
+  const descHtml = item.d ? `<div class="item-desc">${{item.d}}</div>` : '';
+  return `<div class="item-card">${{photoHtml}}<div class="item-body"><div class="item-no">${{no}}</div><div class="item-name">${{recipe.name}}</div>${{descHtml}}${{reheatHtml}}${{allergyHtml}}</div></div>`;
+}}
+
+function buildSheet(nos, perSheet, withPhoto, recipient, dateStr, sheetIdx, totalSheets) {{
+  const gridClass = {{ 4:'grid-2x2', 6:'grid-2x3', 8:'grid-2x4' }}[perSheet] || 'grid-2x3';
+  const itemsHtml = nos.map(no => buildCard(no, perSheet, withPhoto)).join('');
+  const toHtml = recipient
+    ? `<div class="sheet-to"><span>To</span>${{recipient}} さんへ</div>`
+    : `<div class="sheet-to"><span>To</span>　　　　　　　 さんへ</div>`;
+  const dateHtml = dateStr || new Date().toLocaleDateString('ja-JP', {{year:'numeric',month:'long',day:'numeric'}});
+  const pageLabel = totalSheets > 1 ? ` (${{sheetIdx+1}}/${{totalSheets}})` : '';
+  const defs = GIFT_DATA.defaults || {{}};
+  const storageText = defs.storage || '';
+  return `<div class="sheet">
+  <div class="sheet-header">
+    ${{toHtml}}
+    <div class="sheet-from">NYKMAMAのパン${{pageLabel}}<br>${{dateHtml}}</div>
+  </div>
+  <div class="sheet-items ${{gridClass}}">${{itemsHtml}}</div>
+  <div class="sheet-footer">
+    <div class="storage-text">📦 ${{storageText}}</div>
+    <div class="sheet-disclaimer">原材料は加工品を含め必ず現物の表示でご確認ください</div>
+  </div>
+</div>`;
+}}
+
+function renderPreview() {{
+  const scroll = document.getElementById('preview-scroll');
+  const empty = document.getElementById('preview-empty');
+  const perSheet = parseInt(document.getElementById('per-sheet').value);
+  const withPhoto = document.getElementById('with-photo').value === '1';
+  const recipient = document.getElementById('recipient').value.trim();
+  const rawDate = document.getElementById('gift-date').value;
+  const dateStr = rawDate ? new Date(rawDate).toLocaleDateString('ja-JP', {{year:'numeric',month:'long',day:'numeric'}}) : '';
+  document.getElementById('sel-count').textContent = selectedNos.length + '件選択中';
+  document.getElementById('print-btn').disabled = selectedNos.length === 0;
+  if (selectedNos.length === 0) {{
+    scroll.innerHTML = '';
+    scroll.appendChild(empty);
+    empty.style.display = '';
+    return;
+  }}
+  empty.style.display = 'none';
+  // ページ分割
+  const pages = [];
+  for (let i = 0; i < selectedNos.length; i += perSheet) {{
+    pages.push(selectedNos.slice(i, i + perSheet));
+  }}
+  scroll.innerHTML = pages.map((nos, idx) =>
+    buildSheet(nos, perSheet, withPhoto, recipient, dateStr, idx, pages.length)
+  ).join('');
+}}
+
+function handlePrint() {{
+  const autoItems = selectedNos.filter(no => {{
+    const item = getItem(no);
+    return item && item.src === '自動';
+  }});
+  if (autoItems.length > 0) {{
+    const names = autoItems.map(no => {{
+      const r = RECIPES.find(x => x.no === no);
+      return (r ? r.name : no);
+    }}).join('、');
+    if (!confirm(`「自動下書き」の項目が${{autoItems.length}}件含まれています。\\n\\n${{names}}\\n\\n内容を確認の上、印刷してください。続けますか？`)) return;
+  }}
+  window.print();
+}}
+
+// 日付の初期値を今日に
+document.getElementById('gift-date').value = new Date().toISOString().slice(0,10);
+
+document.getElementById('search-input').addEventListener('input', e => {{
+  searchQuery = e.target.value.trim();
+  renderList();
+}});
+
+renderCats();
+renderList();
+renderPreview();
+</script>
+</body>
+</html>'''
+
+    with open('gift.html', 'w', encoding='utf-8') as f:
+        f.write(html)
+    print('gift.html 生成完了')
+
+
 def normalize_photo_extensions():
     """photos/ フォルダ内の大文字拡張子ファイルを小文字にリネームする"""
     for fpath in glob.glob('photos/*'):
@@ -912,6 +1579,7 @@ def main():
         print(f'続きページあり: {overflow}')
 
     build_index_html()
+    build_gift_html()
 
 if __name__ == '__main__':
     main()
