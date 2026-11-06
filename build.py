@@ -1320,7 +1320,7 @@ body {{
       <button class="print-btn" id="print-btn" disabled onclick="handlePrint()">🖨️ 印刷</button>
     </div>
     <div class="preview-scroll" id="preview-scroll">
-      <div class="preview-empty" id="preview-empty">左のリストからパンを選択してください</div>
+      <div class="preview-empty">左のリストからパンを選択してください</div>
     </div>
   </div>
 </div>
@@ -1475,7 +1475,6 @@ function buildSheet(nos, perSheet, withPhoto, recipient, dateStr, sheetIdx, tota
 
 function renderPreview() {{
   const scroll = document.getElementById('preview-scroll');
-  const empty = document.getElementById('preview-empty');
   const perSheet = parseInt(document.getElementById('per-sheet').value);
   const withPhoto = document.getElementById('with-photo').value === '1';
   const recipient = document.getElementById('recipient').value.trim();
@@ -1483,13 +1482,14 @@ function renderPreview() {{
   const dateStr = rawDate ? new Date(rawDate).toLocaleDateString('ja-JP', {{year:'numeric',month:'long',day:'numeric'}}) : '';
   document.getElementById('sel-count').textContent = selectedNos.length + '件選択中';
   document.getElementById('print-btn').disabled = selectedNos.length === 0;
+  scroll.innerHTML = '';
   if (selectedNos.length === 0) {{
-    scroll.innerHTML = '';
-    scroll.appendChild(empty);
-    empty.style.display = '';
+    const ph = document.createElement('div');
+    ph.className = 'preview-empty';
+    ph.textContent = '左のリストからパンを選択してください';
+    scroll.appendChild(ph);
     return;
   }}
-  empty.style.display = 'none';
   // ページ分割
   const pages = [];
   for (let i = 0; i < selectedNos.length; i += perSheet) {{
